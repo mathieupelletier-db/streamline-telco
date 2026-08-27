@@ -33,3 +33,23 @@ care_action_metrics view present on production, with the rolled-up metrics).
 Forecasting/what-if scenario enabled by the change: care_action_metrics answers
 "what retained CLV have we booked per offer type this week (decided_week)?" — the weekly
 save-rate report Rae runs off the operational store.
+
+BRANCH CREATION CAPTURED IN CODE
+--------------------------------
+The dev-branch-off-main workflow is a first-class app artifact:
+  app/scripts/lakebase_branch_workflow.sh
+    create  -> create the dev branch off the MAIN (production) line (copy-on-write)
+    apply   -> apply + validate a migration on the dev branch
+    promote -> promote the validated migration to the main branch
+
+Execution evidence: dev_branch_creation.json lists the live branches with their parent_branch,
+showing `dev` and `dev-forecast` were created off `projects/streamline-telco/branches/production`
+(the main line). The workflow script's `create` command was run against the live project to
+produce this.
+
+PROMOTION VIA COMMITTED MERGE / PR INTO MAIN
+--------------------------------------------
+- git PR #1 (feature/care-action-offer-fk) MERGED into main  -> merge commit 8574348
+- git PR #2 (feature/branch-workflow)       -> promotes this workflow into main
+- git merge fb0c9d4 (feature/operational-schema) -> the relational operational schema
+See git_history.txt + agent_change/pr_merge.txt + agent_change/promotion_merge.txt.

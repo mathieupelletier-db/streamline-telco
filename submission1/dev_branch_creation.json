@@ -1,0 +1,21 @@
+{
+  "main_branch": "production",
+  "note": "Lakebase Autoscaling default branch \"production\" is the main line. Dev branches are copy-on-write snapshots created off it (see parent_branch).",
+  "branches": [
+    {
+      "branch_id": "dev-forecast",
+      "state": "READY",
+      "parent_branch": "projects/streamline-telco/branches/production"
+    },
+    {
+      "branch_id": "production",
+      "state": "READY",
+      "parent_branch": "(root / main line)"
+    },
+    {
+      "branch_id": "dev",
+      "state": "READY",
+      "parent_branch": "projects/streamline-telco/branches/production"
+    }
+  ]
+}
