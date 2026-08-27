@@ -1,0 +1,31 @@
+* 3fdefe9 (HEAD -> feature/build2-app) Add submission2 README + git history for Build 2
+* ac0172c Build 2 Layer 3 — Act: human-approved writeback + closed loop; submission2 evidence
+* 1cccd63 Build 2 Layer 2 — Assist: explain + what-if + draft, grounded on Lakebase Search BM25
+* 568d720 Build 2 Layer 1 — Visualize: live ranked at-risk view + scheduled trigger
+* 30285f1 (origin/main, origin/HEAD, main) Code-defined Lakebase sync (DAB) + executed operational-schema notebook
+* edb34e8 Add execution evidence for the writable operational tables
+* 5bc545c Add branch-workflow evidence to submission
+*   3612d98 Merge pull request #2 from mathieupelletier-db/feature/branch-workflow
+|\  
+| * 2c7df20 (origin/feature/branch-workflow, feature/branch-workflow) Capture the Lakebase branch->validate->promote workflow in code
+|/  
+* c230e20 Configure Lakebase scale-to-zero (idle branches cost ~nothing)
+* 0668cbe Add PR-merge + offer-FK evidence to submission
+*   8574348 Merge pull request #1 from mathieupelletier-db/feature/care-action-offer-fk
+|\  
+| * c598099 (origin/feature/care-action-offer-fk, feature/care-action-offer-fk) Relate care_actions to the offer catalog with a foreign key
+|/  
+* 9f9e489 Add operational-schema submission evidence + promotion-merge record
+*   fb0c9d4 Merge feature/operational-schema: promote relational operational schema to main
+|\  
+| * 9650d5a (origin/feature/operational-schema, feature/operational-schema) Model operational schema for the domain (related tables + FKs)
+|/  
+* 0fc5975 Use native Lakebase Search (BM25) for search evidence
+* 66b23fd Build 1 submission — Lakebase evidence bundle (submission1/)
+*   af70aaf Merge dev-lakebase-care-analytics: promote care_action_analytics to production
+|\  
+| * e301bfe (dev-lakebase-care-analytics) Add care_action_analytics migration (dev branch)
+|/  
+* 9786d41 Milestone 2 — Lakebase serving + write surface
+* 54565d5 Milestone 1 — governed data layer (data, pipeline, MV, dashboard, Genie, ML)
+* f7bc672 Initial commit: Streamline Telco demo
