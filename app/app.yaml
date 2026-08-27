@@ -1,29 +1,19 @@
-# Databricks App manifest — read by the runtime when the container starts.
+# Databricks App manifest — Streamline Care Desk (deployed against the Build-1 DEV branch).
 #
-# This is the TEMPLATE app.yaml. scripts/finalize_app.sh renders the deployed
-# app.yaml from it: keeps this header + command + scopes + binding-derived env,
-# and appends the plain-value env vars (DEMO_CATALOG, DASHBOARD_ID,
-# GENIE_SPACE_ID, …) harvested from the setup job's export_resources output.
-# Plain values live in exactly one place (finalize_app.sh), assembled after
-# the job runs — the bundle can't know the Genie/KA/MAS IDs at deploy time.
-# Binding-derived vars (DATABRICKS_WAREHOUSE_ID, LAKEBASE_ENDPOINT) stay here.
+# Explicit-env variant (no valueFrom bindings): the Autoscaling Lakebase project isn't attachable
+# as a `postgres` app resource, so PG* + LAKEBASE_ENDPOINT are set directly and the app SP
+# (a897c3a6-…) authenticates to the dev branch via its Lakebase Postgres role.
 #
-# Lifecycle on the Apps container (in order):
-#   1. `npm install` against the shipped lockfile.
-#   2. `npm run build` (no-op echo — real build runs locally via
-#      scripts/build-app.sh and dist/ ships via DAB sync.include).
-#   3. The `command:` below starts the server.
+# Lifecycle: `npm install` (proxy) → `npm run build` (no-op; dist/ ships via sync) → command below.
 
 command: ['node', '--env-file-if-exists=.env', 'dist/server.js']
 
-# Scopes minted into the user's OBO token (x-forwarded-access-token).
 user_authorization:
   scopes:
-    - model-serving      # OpenAI Agents loop hits /serving-endpoints/responses
+    - model-serving      # OpenAI Agents loop → serving-endpoints chat/completions
     - genie              # ask_data → Genie space
     - sql                # warehouse-backed analytics queries
     - postgres           # Lakebase pool
-    - ai-gateway         # AI Gateway routing for the Responses API
     - catalog.catalogs:read
     - catalog.schemas:read
     - catalog.tables:read
@@ -32,15 +22,32 @@ env:
   - name: NODE_ENV
     value: production
 
-  # ── Binding-derived ─────────────────────────────────────────────────
-  # AppKit's ResourceRegistry expects DATABRICKS_WAREHOUSE_ID and the
-  # standard PG* vars from the postgres binding (PGHOST/PGDATABASE/PGUSER
-  # /PGPORT/PGSSLMODE are auto-injected by the platform).
-  - name: DATABRICKS_WAREHOUSE_ID
-    valueFrom: sql-warehouse
+  # ── Lakebase (DEV branch) — explicit; SP has a Postgres role on this branch ──
   - name: LAKEBASE_ENDPOINT
-    valueFrom: postgres
-  # Mirror DATABRICKS_WAREHOUSE_ID into WAREHOUSE_ID for config/app.json
-  # placeholder resolution.
+    value: 'projects/streamline-telco/branches/dev/endpoints/primary'
+  - name: PGHOST
+    value: 'ep-silent-block-e88gklku.database.centralus.azuredatabricks.net'
+  - name: PGUSER
+    value: 'a897c3a6-0fb9-442c-84bf-770e92974ee7'
+  - name: PGPORT
+    value: '5432'
+  - name: PGDATABASE
+    value: 'databricks_postgres'
+  - name: PGSSLMODE
+    value: 'require'
+
+  # ── Warehouse (analytics plugin) ──
+  - name: DATABRICKS_WAREHOUSE_ID
+    value: 'e921c86338f3e272'
   - name: WAREHOUSE_ID
-    valueFrom: sql-warehouse
+    value: 'e921c86338f3e272'
+
+  # ── App config (plain values normally injected by finalize_app.sh) ──
+  - name: DEMO_CATALOG
+    value: 'ai_demo_gen'
+  - name: DEMO_SCHEMA
+    value: 'streamline_telco'
+  - name: GENIE_SPACE_ID
+    value: '01f1a22b61531adeb4bfa89a5193ef65'
+  - name: AGENT_MODEL
+    value: 'databricks-claude-sonnet-4-5'

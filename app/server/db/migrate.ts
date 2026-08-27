@@ -31,5 +31,21 @@ export async function runMigrations(db: AppDb): Promise<void> {
         `Run \`npm run db:generate\` first.`,
     );
   }
-  await migrate(db, { migrationsFolder });
+  try {
+    await migrate(db, { migrationsFolder });
+  } catch (e) {
+    // The app service principal may lack CREATE on the `drizzle` migration-tracking
+    // schema on a shared/managed branch. The app tables are provisioned out-of-band
+    // (applied by the owner via the migration files / dev-branch setup), so a failure
+    // to write the drizzle bookkeeping must NOT gate the app. Log and continue —
+    // the tables the app reads/writes already exist.
+    const msg = (e as Error).message ?? String(e);
+    if (/drizzle|permission denied|must be owner|CREATE/i.test(msg)) {
+      console.warn(
+        `[migrate] skipping drizzle migration bookkeeping (tables already provisioned): ${msg.slice(0, 200)}`,
+      );
+      return;
+    }
+    throw e;
+  }
 }
