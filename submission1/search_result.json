@@ -1,49 +1,63 @@
 {
+  "search_engine": "Lakebase Search (lakebase_text BM25, lakebase_bm25 access method)",
   "natural_language_query": "one-time credit for a service outage or billing dispute",
+  "note": "BM25 <@> operator sorts ascending; more-negative bm25_score = stronger relevance.",
   "query_A_matching_offers": [
     {
       "offer_id": "OFFER-001",
       "offer_name": "One-Time Bill Credit $50",
       "offer_type": "bill_credit",
       "value_usd": 50,
-      "rank": 0.8733
+      "bm25_score": -7.541
+    },
+    {
+      "offer_id": "OFFER-002",
+      "offer_name": "One-Time Bill Credit $100",
+      "offer_type": "bill_credit",
+      "value_usd": 100,
+      "bm25_score": -5.3906
     }
   ],
   "query_B_subscribers_matching_history_with_recommended_offer": [
     {
-      "subscriber_id": "SUB-0000301",
-      "home_metro": "Columbus",
-      "service_summary": "bundle plan, 85 months tenure, node NODE-OHIO-14 . Recent outage on their node and a billing dispute; open ticket, elevated churn risk.",
+      "subscriber_id": "SUB-0001152",
+      "home_metro": "Cleveland",
+      "risk_band": "critical",
       "recommended_offer": "bill_credit",
-      "rank": 0.2387
+      "bm25_score": -18.6453,
+      "service_summary": "broadband plan, 13 months tenure, node NODE-OH-13 . Recent outage on their node and a billing dispute; open ticket, elevated churn risk."
     },
     {
-      "subscriber_id": "SUB-0000338",
+      "subscriber_id": "SUB-0007220",
       "home_metro": "Columbus",
-      "service_summary": "bundle plan, 49 months tenure, node NODE-OHIO-14 . Recent outage on their node and a billing dispute; open ticket, elevated churn risk.",
+      "risk_band": "critical",
       "recommended_offer": "bill_credit",
-      "rank": 0.2387
+      "bm25_score": -18.6453,
+      "service_summary": "mobile plan, 24 months tenure, node NODE-OHIO-14 . Recent outage on their node and a billing dispute; open ticket, elevated churn risk."
     },
     {
-      "subscriber_id": "SUB-0000375",
+      "subscriber_id": "SUB-0002299",
       "home_metro": "Columbus",
-      "service_summary": "mobile plan, 91 months tenure, node NODE-OHIO-14 . Recent outage on their node and a billing dispute; open ticket, elevated churn risk.",
+      "risk_band": "critical",
       "recommended_offer": "bill_credit",
-      "rank": 0.2387
+      "bm25_score": -18.6453,
+      "service_summary": "mobile plan, 9 months tenure, node NODE-OHIO-14 . Recent outage on their node and a billing dispute; open ticket, elevated churn risk."
     },
     {
-      "subscriber_id": "SUB-0000412",
-      "home_metro": "Columbus",
-      "service_summary": "mobile plan, 69 months tenure, node NODE-OHIO-14 . Recent outage on their node and a billing dispute; open ticket, elevated churn risk.",
+      "subscriber_id": "SUB-0005259",
+      "home_metro": "Cleveland",
+      "risk_band": "critical",
       "recommended_offer": "bill_credit",
-      "rank": 0.2387
+      "bm25_score": -18.6453,
+      "service_summary": "broadband plan, 37 months tenure, node NODE-OH-32 . Recent outage on their node and a billing dispute; open ticket, elevated churn risk."
     },
     {
-      "subscriber_id": "SUB-0000214",
-      "home_metro": "Columbus",
-      "service_summary": "broadband plan, 60 months tenure, node NODE-OHIO-14 . Recent outage on their node and a billing dispute; open ticket, elevated churn risk.",
+      "subscriber_id": "SUB-0004593",
+      "home_metro": "Cleveland",
+      "risk_band": "critical",
       "recommended_offer": "bill_credit",
-      "rank": 0.2387
+      "bm25_score": -18.6453,
+      "service_summary": "mobile plan, 20 months tenure, node NODE-OH-37 . Recent outage on their node and a billing dispute; open ticket, elevated churn risk."
     }
   ]
 }

@@ -1,32 +1,38 @@
-Lakebase Search — natural-language query over the synced text columns.
+Lakebase Search — BM25 full-text search via the lakebase_text extension.
 
-Use case: the Care Desk agent's search_history / offer-match tool. Rae asks in plain language
-which retention play fits a service-and-billing grievance, and which subscribers' service history
-matches that situation. Two searchable text surfaces are indexed in Lakebase Postgres:
-  - public.offers.description        (the retention offer catalog)
-  - public.subscriber_position.service_summary  (per-subscriber service history)
+Extensions enabled: lakebase_text (0.1.1), lakebase_tokenizer, lakebase_vector (1.1.0).
+Search uses the lakebase_bm25 access method with the tsvector_bm25_ops operator class, the
+to_bm25query(tsvector, index_regclass) query builder, and the BM25 ranking operator <@>
+(ascending sort; more-negative score = stronger match). This is native Lakebase Search, not
+generic Postgres FTS.
+
+Setup (app-owned search corpus over the synced read-only mirrors):
+  -- Offer catalog
+  CREATE TABLE public.offer_search AS SELECT offer_id, offer_name, offer_type, value_usd, description FROM public.offers;
+  ALTER TABLE public.offer_search ADD COLUMN description_tsv tsvector
+      GENERATED ALWAYS AS (to_tsvector('english', coalesce(description,''))) STORED;
+  CREATE INDEX idx_offer_search_bm25 ON public.offer_search USING lakebase_bm25 (description_tsv tsvector_bm25_ops);
+  -- Subscriber service history
+  CREATE TABLE public.service_history_search AS
+      SELECT subscriber_id, home_metro, plan_type, risk_band, churn_reason, service_summary FROM public.subscriber_position;
+  ALTER TABLE public.service_history_search ADD COLUMN summary_tsv tsvector
+      GENERATED ALWAYS AS (to_tsvector('english', coalesce(service_summary,''))) STORED;
+  CREATE INDEX idx_service_history_bm25 ON public.service_history_search USING lakebase_bm25 (summary_tsv tsvector_bm25_ops);
 
 Natural-language query: "one-time credit for a service outage or billing dispute"
 
-Implementation: PostgreSQL full-text search (to_tsvector/websearch_to_tsquery, GIN-indexed) with
-ts_rank relevance, plus pg_trgm similarity as a fuzzy fallback. Query A ranks matching offers;
-Query B finds subscribers whose service history matches "outage billing dispute" and returns the
-retention offer the model recommends for them.
-
-Query A (offers):
+Query A (BM25 over the offer catalog):
   SELECT offer_id, offer_name, offer_type, value_usd,
-         ts_rank(to_tsvector('english', description),
-                 websearch_to_tsquery('english','one-time credit service outage billing dispute')) AS rank
-  FROM public.offers
-  WHERE to_tsvector('english', description) @@
-        websearch_to_tsquery('english','one-time credit service outage billing dispute')
-  ORDER BY rank DESC;
+         description_tsv <@> to_bm25query(to_tsvector('english','one-time credit service outage billing dispute'),
+                                          'idx_offer_search_bm25') AS bm25_score
+  FROM public.offer_search
+  ORDER BY bm25_score LIMIT 5;
 
-Query B (subscribers whose history matches, + recommended offer):
-  SELECT p.subscriber_id, p.home_metro, p.service_summary, r.recommended_offer,
-         ts_rank(to_tsvector('english', p.service_summary),
-                 websearch_to_tsquery('english','outage billing dispute')) AS rank
-  FROM public.subscriber_position p
-  JOIN public.retention_recommendations r ON p.subscriber_id = r.subscriber_id
-  WHERE to_tsvector('english', p.service_summary) @@ websearch_to_tsquery('english','outage billing dispute')
-  ORDER BY rank DESC LIMIT 5;
+Query B (BM25 over subscriber service history, joined to the recommended offer):
+  SELECT s.subscriber_id, s.home_metro, s.risk_band, r.recommended_offer,
+         s.summary_tsv <@> to_bm25query(to_tsvector('english','outage node billing dispute open ticket'),
+                                        'idx_service_history_bm25') AS bm25_score,
+         s.service_summary
+  FROM public.service_history_search s
+  JOIN public.retention_recommendations r ON s.subscriber_id = r.subscriber_id
+  ORDER BY bm25_score LIMIT 5;

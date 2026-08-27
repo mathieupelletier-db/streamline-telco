@@ -30,9 +30,13 @@ UC catalog **`streamline_lakebase`**, source data in **`ai_demo_gen.streamline_t
   view), authored by the coding agent (see the `Co-authored-by:` trailer in `agent_change.diff` and
   `git_history.txt`). `validation_query_result.json` = the view on production; `promotion_validation.json`
   confirms both objects exist on the production branch after promotion.
-- **Lakebase Search** — PostgreSQL full-text search (GIN `to_tsvector` + `websearch_to_tsquery`, `ts_rank`)
-  plus `pg_trgm`, over the synced `offers.description` and `subscriber_position.service_summary`. The NL
-  query "one-time credit for a service outage or billing dispute" ranks the bill-credit offer first and
-  finds the matching at-risk subscribers (incl. hero SUB-0000214).
+- **Lakebase Search** — native **BM25** via the `lakebase_text` extension (`lakebase_bm25` access method,
+  `tsvector_bm25_ops` opclass, `to_bm25query(...)` + the `<@>` ranking operator). BM25 indexes over the
+  offer catalog (`offer_search`) and subscriber service history (`service_history_search`), built from the
+  synced read-only mirrors. The NL query "one-time credit for a service outage or billing dispute" ranks
+  the bill-credit offers by BM25 score, and the service-history search finds the critical at-risk
+  subscribers whose outage/billing history matches, each joined to their `bill_credit` recommendation.
+  (`lakebase_vector` is also enabled for embedding search.) BM25 `<@>` sorts ascending — a more-negative
+  score means a stronger match.
 - **Core question** — retention exposure across the at-risk book, answered from the synced mirrors:
   200 at-risk / all critical, $353,377 CLV at risk, all recommended `bill_credit`, $198,393 predicted retained.

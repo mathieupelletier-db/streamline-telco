@@ -1,4 +1,5 @@
-* 843bf09 (HEAD -> main) Build 1 submission — Lakebase evidence bundle (submission1/)
+* aeb3f82 (HEAD -> main) Use native Lakebase Search (BM25) for search evidence
+* 66b23fd Build 1 submission — Lakebase evidence bundle (submission1/)
 *   af70aaf Merge dev-lakebase-care-analytics: promote care_action_analytics to production
 |\  
 | * e301bfe (dev-lakebase-care-analytics) Add care_action_analytics migration (dev branch)
