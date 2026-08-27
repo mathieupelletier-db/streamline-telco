@@ -1,0 +1,9 @@
+{
+  "usage_tracking_config": {"enabled": true},
+  "inference_table_config": {"catalog_name": "ai_demo_gen", "schema_name": "ai_gateway", "table_name_prefix": "streamline_care_desk", "enabled": true},
+  "guardrails": {
+    "input": {"safety": true, "pii": {"behavior": "BLOCK"}},
+    "output": {"safety": true, "pii": {"behavior": "BLOCK"}}
+  },
+  "rate_limits": [{"calls": 100000, "renewal_period": "minute", "key": "endpoint"}]
+}

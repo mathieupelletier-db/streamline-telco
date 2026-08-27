@@ -1,0 +1,35 @@
+{
+  "endpoint": "databricks-claude-sonnet-4-5",
+  "ai_gateway": {
+    "guardrails": {
+      "input": {
+        "pii": {
+          "behavior": "BLOCK"
+        },
+        "safety": true
+      },
+      "output": {
+        "pii": {
+          "behavior": "BLOCK"
+        },
+        "safety": true
+      }
+    },
+    "inference_table_config": {
+      "catalog_name": "ai_demo_gen",
+      "enabled": true,
+      "schema_name": "ai_gateway",
+      "table_name_prefix": "streamline_care_desk"
+    },
+    "rate_limits": [
+      {
+        "calls": 100000,
+        "key": "endpoint",
+        "renewal_period": "minute"
+      }
+    ],
+    "usage_tracking_config": {
+      "enabled": true
+    }
+  }
+}

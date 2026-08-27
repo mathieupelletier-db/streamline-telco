@@ -35,11 +35,21 @@
     "ml_model_name": "ai_demo_gen.streamline_telco.churn_recommender",
     "mlflow_experiment_path": "/Workspace/Users/mathieu.pelletier@databricks.com/streamline/experiments/churn_recommender",
     "lakebase_project": "streamline-telco",
-    "lakebase_branches": ["production", "dev"],
+    "lakebase_branches": [
+      "production",
+      "dev"
+    ],
     "lakebase_host": "ep-fancy-frost-e8290smv.database.centralus.azuredatabricks.net",
     "lakebase_database": "databricks_postgres",
     "lakebase_uc_catalog": "streamline_lakebase",
-    "lakebase_synced_tables": ["subscriber_position", "open_atrisk", "retention_recommendations", "offers"],
-    "lakebase_writable_table": "care_actions"
+    "lakebase_synced_tables": [
+      "subscriber_position",
+      "open_atrisk",
+      "retention_recommendations",
+      "offers"
+    ],
+    "lakebase_writable_table": "care_actions",
+    "ai_gateway_endpoint": "databricks-claude-sonnet-4-5",
+    "ai_gateway_inference_table": "ai_demo_gen.ai_gateway.streamline_care_desk_*"
   }
 }
