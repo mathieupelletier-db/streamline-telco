@@ -1,0 +1,8 @@
+* 843bf09 (HEAD -> main) Build 1 submission — Lakebase evidence bundle (submission1/)
+*   af70aaf Merge dev-lakebase-care-analytics: promote care_action_analytics to production
+|\  
+| * e301bfe (dev-lakebase-care-analytics) Add care_action_analytics migration (dev branch)
+|/  
+* 9786d41 (origin/main, origin/HEAD) Milestone 2 — Lakebase serving + write surface
+* 54565d5 Milestone 1 — governed data layer (data, pipeline, MV, dashboard, Genie, ML)
+* f7bc672 Initial commit: Streamline Telco demo

@@ -1,0 +1,35 @@
+DEVELOPMENT BRANCH — Lakebase (Autoscaling), project streamline-telco
+=====================================================================
+
+Branch name:        dev   (created off the production branch)
+Parent branch:      production   (the "main" line)
+Dev endpoint host:  ep-silent-block-e88gklku.database.centralus.azuredatabricks.net
+Prod endpoint host: ep-fancy-frost-e8290smv.database.centralus.azuredatabricks.net
+
+Branch model: Lakebase Autoscaling branches are copy-on-write from a point-in-time snapshot of
+the source branch — the dev branch is an isolated, independently-writable copy of production's
+data + schema. Work is done + validated on dev, then promoted (the validated DDL/data is applied)
+to production.
+
+Created with:
+  databricks postgres create-branch projects/streamline-telco dev \
+    --json '{"spec": {"source_branch": "projects/streamline-telco/branches/production", "no_expiry": true}}'
+
+CHANGES MADE ON THE dev BRANCH
+------------------------------
+Migration: agent_change/001_care_action_analytics.sql  (authored by the coding agent)
+  1. Schema change (DDL): ALTER TABLE public.care_actions ADD COLUMN decided_week TEXT
+     + a backfill UPDATE stamping the ISO year-week from decided_at/created_at.
+  2. New analytics VIEW: public.care_action_metrics — save-rate + retained-CLV rollup per
+     offer_type x status over the app's writable care_actions table.
+  3. Seed data: 3 care_actions rows (approved bill credits for SUB-0000214, SUB-0000301;
+     a proposed credit for SUB-0000375) representing the app's Act-layer writes.
+
+Validated on dev (see agent_change/ + reverse_sync_sample.json), then PROMOTED to production:
+the same migration was applied to the production branch and re-validated
+(agent_change/promotion_validation.json shows both the decided_week column and the
+care_action_metrics view present on production, with the rolled-up metrics).
+
+Forecasting/what-if scenario enabled by the change: care_action_metrics answers
+"what retained CLV have we booked per offer type this week (decided_week)?" — the weekly
+save-rate report Rae runs off the operational store.

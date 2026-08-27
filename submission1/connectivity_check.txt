@@ -1,0 +1,13 @@
+Lakebase instance (Autoscaling project): streamline-telco
+UC catalog over Lakebase: streamline_lakebase
+Branch: production   Endpoint: primary (read-write)
+Host: ep-fancy-frost-e8290smv.database.centralus.azuredatabricks.net
+Logical database: databricks_postgres
+
+$ SELECT version();
+ PostgreSQL 17.11 (32e7196) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+
+
+$ SELECT current_database(), current_user, now();
+ databricks_postgres | mathieu.pelletier@databricks.com | 2026-08-27 16:06:32.413156+00
+

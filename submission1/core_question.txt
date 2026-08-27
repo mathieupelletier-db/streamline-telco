@@ -1,0 +1,8 @@
+Business question (Rae Nakamura, SVP Customer Care & Retention):
+
+"After the NODE-OHIO-14 outage, how much customer lifetime value is at risk across our
+at-risk subscribers, how many are critical, and which retention offer does the model
+recommend to save the most CLV?"
+
+Answerable directly from the synced Lakebase tables (subscriber_position + retention_recommendations),
+which mirror the governed gold layer. This is the headline the Care Desk app + dashboard show.

@@ -1,0 +1,10 @@
+[
+    {
+        "atrisk_subscribers": 200,
+        "critical_subscribers": 200,
+        "total_clv_at_risk_usd": 353377.08,
+        "recommended_offer": "bill_credit",
+        "subscribers_for_offer": 200,
+        "total_predicted_retained_clv_usd": 198392.87
+    }
+]

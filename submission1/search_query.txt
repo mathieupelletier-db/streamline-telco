@@ -1,0 +1,32 @@
+Lakebase Search — natural-language query over the synced text columns.
+
+Use case: the Care Desk agent's search_history / offer-match tool. Rae asks in plain language
+which retention play fits a service-and-billing grievance, and which subscribers' service history
+matches that situation. Two searchable text surfaces are indexed in Lakebase Postgres:
+  - public.offers.description        (the retention offer catalog)
+  - public.subscriber_position.service_summary  (per-subscriber service history)
+
+Natural-language query: "one-time credit for a service outage or billing dispute"
+
+Implementation: PostgreSQL full-text search (to_tsvector/websearch_to_tsquery, GIN-indexed) with
+ts_rank relevance, plus pg_trgm similarity as a fuzzy fallback. Query A ranks matching offers;
+Query B finds subscribers whose service history matches "outage billing dispute" and returns the
+retention offer the model recommends for them.
+
+Query A (offers):
+  SELECT offer_id, offer_name, offer_type, value_usd,
+         ts_rank(to_tsvector('english', description),
+                 websearch_to_tsquery('english','one-time credit service outage billing dispute')) AS rank
+  FROM public.offers
+  WHERE to_tsvector('english', description) @@
+        websearch_to_tsquery('english','one-time credit service outage billing dispute')
+  ORDER BY rank DESC;
+
+Query B (subscribers whose history matches, + recommended offer):
+  SELECT p.subscriber_id, p.home_metro, p.service_summary, r.recommended_offer,
+         ts_rank(to_tsvector('english', p.service_summary),
+                 websearch_to_tsquery('english','outage billing dispute')) AS rank
+  FROM public.subscriber_position p
+  JOIN public.retention_recommendations r ON p.subscriber_id = r.subscriber_id
+  WHERE to_tsvector('english', p.service_summary) @@ websearch_to_tsquery('english','outage billing dispute')
+  ORDER BY rank DESC LIMIT 5;

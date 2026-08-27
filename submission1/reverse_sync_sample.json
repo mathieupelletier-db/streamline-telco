@@ -1,0 +1,62 @@
+[
+    {
+        "_pg_change_type": "update_preimage",
+        "_pg_lsn": "45144648",
+        "_pg_xid": "3106",
+        "_sort_by": "0",
+        "_timestamp": "2026-08-27T16:24:21.247",
+        "decided_week": "2026-W35",
+        "offer_type": "bill_credit",
+        "predicted_retained_clv_usd": "1357.19",
+        "status": "approved",
+        "subscriber_id": "SUB-0000214"
+    },
+    {
+        "_pg_change_type": "update_postimage",
+        "_pg_lsn": "45144648",
+        "_pg_xid": "3106",
+        "_sort_by": "1",
+        "_timestamp": "2026-08-27T16:24:21.251",
+        "decided_week": "2026-W35",
+        "offer_type": "bill_credit",
+        "predicted_retained_clv_usd": "1357.19",
+        "status": "executed",
+        "subscriber_id": "SUB-0000214"
+    },
+    {
+        "_pg_change_type": "insert",
+        "_pg_lsn": "45148768",
+        "_pg_xid": "3110",
+        "_sort_by": "2",
+        "_timestamp": "2026-08-27T16:25:44.586",
+        "decided_week": "2026-W35",
+        "offer_type": "bill_credit",
+        "predicted_retained_clv_usd": "1312.44",
+        "status": "approved",
+        "subscriber_id": "SUB-0000412"
+    },
+    {
+        "_pg_change_type": "update_preimage",
+        "_pg_lsn": "45149232",
+        "_pg_xid": "3110",
+        "_sort_by": "3",
+        "_timestamp": "2026-08-27T16:25:44.586",
+        "decided_week": "2026-W35",
+        "offer_type": "bill_credit",
+        "predicted_retained_clv_usd": "1364.53",
+        "status": "approved",
+        "subscriber_id": "SUB-0000301"
+    },
+    {
+        "_pg_change_type": "update_postimage",
+        "_pg_lsn": "45149232",
+        "_pg_xid": "3110",
+        "_sort_by": "4",
+        "_timestamp": "2026-08-27T16:25:44.586",
+        "decided_week": "2026-W35",
+        "offer_type": "bill_credit",
+        "predicted_retained_clv_usd": "1364.53",
+        "status": "executed",
+        "subscriber_id": "SUB-0000301"
+    }
+]

@@ -1,0 +1,18 @@
+[
+    {
+        "offer_type": "bill_credit",
+        "status": "approved",
+        "action_count": 1,
+        "subscribers": 1,
+        "total_predicted_retained_clv_usd": 1364.53,
+        "avg_predicted_retained_clv_usd": 1364.53
+    },
+    {
+        "offer_type": "bill_credit",
+        "status": "executed",
+        "action_count": 1,
+        "subscribers": 1,
+        "total_predicted_retained_clv_usd": 1357.19,
+        "avg_predicted_retained_clv_usd": 1357.19
+    }
+]

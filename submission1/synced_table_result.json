@@ -1,0 +1,122 @@
+[
+    {
+        "subscriber_id": "SUB-0003372",
+        "plan_type": "bundle",
+        "tenure_months": 38,
+        "home_metro": "Cleveland",
+        "churn_risk_score": 0.912,
+        "churn_reason": "service",
+        "risk_band": "critical",
+        "clv_at_risk_usd": 2734.69,
+        "recommended_offer": "bill_credit",
+        "predicted_retained_clv_usd": 1364.53
+    },
+    {
+        "subscriber_id": "SUB-0002373",
+        "plan_type": "bundle",
+        "tenure_months": 53,
+        "home_metro": "Columbus",
+        "churn_risk_score": 0.911,
+        "churn_reason": "service",
+        "risk_band": "critical",
+        "clv_at_risk_usd": 2726.44,
+        "recommended_offer": "bill_credit",
+        "predicted_retained_clv_usd": 1364.53
+    },
+    {
+        "subscriber_id": "SUB-0004815",
+        "plan_type": "broadband",
+        "tenure_months": 32,
+        "home_metro": "Cleveland",
+        "churn_risk_score": 0.932,
+        "churn_reason": "service",
+        "risk_band": "critical",
+        "clv_at_risk_usd": 2642.78,
+        "recommended_offer": "bill_credit",
+        "predicted_retained_clv_usd": 1247.05
+    },
+    {
+        "subscriber_id": "SUB-0003261",
+        "plan_type": "mobile",
+        "tenure_months": 8,
+        "home_metro": "Cleveland",
+        "churn_risk_score": 0.898,
+        "churn_reason": "service",
+        "risk_band": "critical",
+        "clv_at_risk_usd": 2617.49,
+        "recommended_offer": "bill_credit",
+        "predicted_retained_clv_usd": 1351.71
+    },
+    {
+        "subscriber_id": "SUB-0000856",
+        "plan_type": "mobile",
+        "tenure_months": 54,
+        "home_metro": "Columbus",
+        "churn_risk_score": 0.93,
+        "churn_reason": "service",
+        "risk_band": "critical",
+        "clv_at_risk_usd": 2596.49,
+        "recommended_offer": "bill_credit",
+        "predicted_retained_clv_usd": 1349.42
+    },
+    {
+        "subscriber_id": "SUB-0006961",
+        "plan_type": "mobile",
+        "tenure_months": 14,
+        "home_metro": "Cleveland",
+        "churn_risk_score": 0.882,
+        "churn_reason": "service",
+        "risk_band": "critical",
+        "clv_at_risk_usd": 2593.72,
+        "recommended_offer": "bill_credit",
+        "predicted_retained_clv_usd": 1737.46
+    },
+    {
+        "subscriber_id": "SUB-0000893",
+        "plan_type": "mobile",
+        "tenure_months": 15,
+        "home_metro": "Columbus",
+        "churn_risk_score": 0.95,
+        "churn_reason": "service",
+        "risk_band": "critical",
+        "clv_at_risk_usd": 2580.73,
+        "recommended_offer": "bill_credit",
+        "predicted_retained_clv_usd": 1285.34
+    },
+    {
+        "subscriber_id": "SUB-0000634",
+        "plan_type": "mobile",
+        "tenure_months": 49,
+        "home_metro": "Cleveland",
+        "churn_risk_score": 0.95,
+        "churn_reason": "service",
+        "risk_band": "critical",
+        "clv_at_risk_usd": 2578.91,
+        "recommended_offer": "bill_credit",
+        "predicted_retained_clv_usd": 1266.67
+    },
+    {
+        "subscriber_id": "SUB-0003964",
+        "plan_type": "broadband",
+        "tenure_months": 29,
+        "home_metro": "Columbus",
+        "churn_risk_score": 0.95,
+        "churn_reason": "service",
+        "risk_band": "critical",
+        "clv_at_risk_usd": 2556.11,
+        "recommended_offer": "bill_credit",
+        "predicted_retained_clv_usd": 1332.52
+    },
+    {
+        "subscriber_id": "SUB-0005703",
+        "plan_type": "mobile",
+        "tenure_months": 88,
+        "home_metro": "Columbus",
+        "churn_risk_score": 0.919,
+        "churn_reason": "service",
+        "risk_band": "critical",
+        "clv_at_risk_usd": 2550.78,
+        "recommended_offer": "bill_credit",
+        "predicted_retained_clv_usd": 1385.5
+    }
+]

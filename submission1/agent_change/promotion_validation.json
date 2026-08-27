@@ -1,0 +1,16 @@
+{
+    "promoted_objects": {
+        "decided_week_column_exists": true,
+        "care_action_metrics_view_exists": true
+    },
+    "care_action_metrics": [
+        {
+            "offer_type": "bill_credit",
+            "status": "approved",
+            "action_count": 2,
+            "subscribers": 2,
+            "total_predicted_retained_clv_usd": 2721.72,
+            "avg_predicted_retained_clv_usd": 1360.86
+        }
+    ]
+}
