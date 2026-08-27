@@ -17,16 +17,35 @@
 bundle:
   name: workshop-streamline-telco
 
+include:
+  - resources/*.yml
+
+sync:
+  exclude:
+    # The workshop ships generate_data (no extension) as the notebook source; the bundle uses the
+    # .py copy (notebook_task needs the extension). Exclude the extension-less twin to avoid a
+    # remote-path collision.
+    - data_generation/generate_data
+
 workspace:
   root_path: /Workspace/Users/${workspace.current_user.userName}/streamline-telco-workshop
 
 variables:
   catalog:
     description: Unity Catalog for the workshop data (must already exist / you can create it).
-    default: dbdemos_templates
+    default: ai_demo_gen
   schema:
     description: Schema for the demo tables + the raw_data volume (created by this bundle).
     default: streamline_telco
+  lakebase_project:
+    description: Lakebase Autoscaling project hosting the synced Postgres tables.
+    default: streamline-telco
+  lakebase_branch:
+    description: Lakebase branch (the main/serving line) the synced tables live on.
+    default: production
+  lakebase_database:
+    description: Logical Postgres database in the Lakebase branch.
+    default: databricks_postgres
 
 resources:
   schemas:

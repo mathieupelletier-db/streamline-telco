@@ -1,0 +1,45 @@
+Name: workshop-streamline-telco
+Target: dev
+Workspace:
+  User: mathieu.pelletier@databricks.com
+  Path: /Workspace/Users/mathieu.pelletier@databricks.com/streamline-telco-workshop
+Resources:
+  Jobs:
+    streamline_setup:
+      Name: [dev mathieu_pelletier] [Workshop] Streamline Telco — generate data
+      URL:  https://adb-7405612117836809.9.azuredatabricks.net/jobs/404033240789723
+  Postgres synced tables:
+    offers:
+      Name: streamline_lakebase.public.offers
+      URL:  https://adb-7405612117836809.9.azuredatabricks.net/explore/data/streamline_lakebase/public/offers
+    open_atrisk:
+      Name: streamline_lakebase.public.open_atrisk
+      URL:  https://adb-7405612117836809.9.azuredatabricks.net/explore/data/streamline_lakebase/public/open_atrisk
+    retention_recommendations:
+      Name: streamline_lakebase.public.retention_recommendations
+      URL:  https://adb-7405612117836809.9.azuredatabricks.net/explore/data/streamline_lakebase/public/retention_recommendations
+    subscriber_position:
+      Name: streamline_lakebase.public.subscriber_position
+      URL:  https://adb-7405612117836809.9.azuredatabricks.net/explore/data/streamline_lakebase/public/subscriber_position
+  Schemas:
+    demo_schema:
+      Name: dev_mathieu_pelletier_streamline_telco
+      URL:  https://adb-7405612117836809.9.azuredatabricks.net/explore/data/ai_demo_gen/dev_mathieu_pelletier_streamline_telco
+  Volumes:
+    raw_data:
+      Name: raw_data
+      URL:  https://adb-7405612117836809.9.azuredatabricks.net/explore/data/volumes/ai_demo_gen/dev_mathieu_pelletier_streamline_telco/raw_data
+
+=== bundle validate (code-defined sync) ===
+Target: dev
+Workspace:
+  User: mathieu.pelletier@databricks.com
+  Path: /Workspace/Users/mathieu.pelletier@databricks.com/streamline-telco-workshop
+
+Validation OK!
+
+=== synced tables state (deployed + ONLINE) ===
+  streamline_lakebase.public.subscriber_position -> SYNCED_TABLE_ONLINE_NO_PENDING_UPDATE
+  streamline_lakebase.public.open_atrisk -> SYNCED_TABLE_ONLINE_NO_PENDING_UPDATE
+  streamline_lakebase.public.retention_recommendations -> SYNCED_TABLE_ONLINE_NO_PENDING_UPDATE
+  streamline_lakebase.public.offers -> SYNCED_TABLE_ONLINE_NO_PENDING_UPDATE

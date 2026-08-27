@@ -12,7 +12,9 @@ UC catalog **`streamline_lakebase`**, source data in **`ai_demo_gen.streamline_t
 | 5 | Coding-agent's schema/data change (diff/migration, authorship, validation, promotion) | `agent_change/` |
 | 5b | Operational schema modeled for the domain (related tables + PK/FK), promoted via a committed merge AND a merged GitHub PR into main | `agent_change/operational_schema.md`, `agent_change/002_operational_schema.sql`, `agent_change/003_care_action_offer_fk.sql`, `agent_change/operational_schema_result.json`, `agent_change/promotion_merge.txt`, `agent_change/pr_merge.txt` |
 | 5c | Scale-to-zero configured so idle branches cost ~nothing | `scale_to_zero.json` (live evidence), build construct: `app/scripts/lakebase_scale_to_zero.sh` |
-| 5d | Writable Postgres tables exist, distinct from read-only synced tables — WITH execution evidence | `write_execution_transcript.txt` (INSERT/UPDATE output), `write_execution_result.json` (rows + ownership), build construct: `app/scripts/lakebase_write_demo.sh` |
+| 5d | Writable Postgres tables exist, distinct from read-only synced tables — WITH execution evidence | `write_execution_transcript.txt` (INSERT/UPDATE output), `write_execution_result.json` (rows + ownership), executed notebook `04_lakebase_operational_validation.ipynb` (embedded outputs), build construct: `app/scripts/lakebase_write_demo.sh` |
+| 5e | Operational schema + writable/synced distinction PROVEN RUNNING (executed notebook with output) | `04_lakebase_operational_validation.ipynb` (run on serverless; cells 1-3 show live results) |
+| 5f | Code-defined Delta→Lakebase sync (DAB, not UI) | `dab_sync_deploy.txt` (bundle validate + deploy + ONLINE state), build construct: `resources/lakebase_sync.yml` (`PostgresSyncedTable`) + `databricks.yml` |
 | 6 | Lakebase Search query + relevant records for a natural-language query | `search_query.txt`, `search_result.json` |
 | 7 | Representative business question + query + correct result | `core_question.txt`, `core_query.sql`, `core_query_result.json` |
 | 8 | Git history (`git log --graph --oneline --decorate --all`) with branch off main + promotion merge | `git_history.txt` |

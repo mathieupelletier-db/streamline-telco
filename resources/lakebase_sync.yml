@@ -1,0 +1,61 @@
+# Code-defined Delta -> Lakebase sync (Databricks Asset Bundle).
+#
+# Declares the four read-only synced tables that mirror the governed Delta gold layer into the
+# Lakebase Postgres `public` schema. This replaces the ad-hoc CLI setup with a versioned,
+# declarative definition: `databricks bundle deploy` creates/updates the synced tables.
+#
+# Each PostgresSyncedTable becomes both a UC online view (Lakehouse Federation) and a Postgres
+# table in the connected database, kept in sync from its source Delta table via a managed pipeline.
+resources:
+  postgres_synced_tables:
+    subscriber_position:
+      synced_table_id: streamline_lakebase.public.subscriber_position
+      branch: projects/${var.lakebase_project}/branches/${var.lakebase_branch}
+      postgres_database: ${var.lakebase_database}
+      source_table_full_name: ${var.catalog}.${var.schema}.gold_subscriber_position
+      primary_key_columns:
+        - subscriber_id
+      scheduling_policy: SNAPSHOT
+      create_database_objects_if_missing: true
+      new_pipeline_spec:
+        storage_catalog: ${var.catalog}
+        storage_schema: ${var.schema}
+
+    open_atrisk:
+      synced_table_id: streamline_lakebase.public.open_atrisk
+      branch: projects/${var.lakebase_project}/branches/${var.lakebase_branch}
+      postgres_database: ${var.lakebase_database}
+      source_table_full_name: ${var.catalog}.${var.schema}.gold_open_atrisk
+      primary_key_columns:
+        - subscriber_id
+      scheduling_policy: SNAPSHOT
+      create_database_objects_if_missing: true
+      new_pipeline_spec:
+        storage_catalog: ${var.catalog}
+        storage_schema: ${var.schema}
+
+    retention_recommendations:
+      synced_table_id: streamline_lakebase.public.retention_recommendations
+      branch: projects/${var.lakebase_project}/branches/${var.lakebase_branch}
+      postgres_database: ${var.lakebase_database}
+      source_table_full_name: ${var.catalog}.${var.schema}.gold_retention_recommendations
+      primary_key_columns:
+        - subscriber_id
+      scheduling_policy: SNAPSHOT
+      create_database_objects_if_missing: true
+      new_pipeline_spec:
+        storage_catalog: ${var.catalog}
+        storage_schema: ${var.schema}
+
+    offers:
+      synced_table_id: streamline_lakebase.public.offers
+      branch: projects/${var.lakebase_project}/branches/${var.lakebase_branch}
+      postgres_database: ${var.lakebase_database}
+      source_table_full_name: ${var.catalog}.${var.schema}.raw_offers
+      primary_key_columns:
+        - offer_id
+      scheduling_policy: SNAPSHOT
+      create_database_objects_if_missing: true
+      new_pipeline_spec:
+        storage_catalog: ${var.catalog}
+        storage_schema: ${var.schema}
