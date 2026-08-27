@@ -1,0 +1,21 @@
+=== GitHub Pull Request (promotion via PR into main) ===
+PR #1: Relate care_actions to the offer catalog with a foreign key
+URL:      https://github.com/mathieupelletier-db/streamline-telco/pull/1
+State:    MERGED
+Merged:   2026-08-27T17:06:15Z
+Base:     main  <-  Head: feature/care-action-offer-fk
+Merge commit: 85743483c34074b23de6a2595f71dc047e936ac9
+
+=== git show of the PR merge commit on main ===
+commit 85743483c34074b23de6a2595f71dc047e936ac9
+Merge: 9f9e489 c598099
+Author: mathieupelletier-db <145681467+mathieupelletier-db@users.noreply.github.com>
+Date:   Thu Aug 27 13:06:15 2026 -0400
+
+    Merge pull request #1 from mathieupelletier-db/feature/care-action-offer-fk
+    
+    Relate care_actions to the offer catalog with a foreign key
+
+ app/server/db/schema.ts                 | 14 ++++++++-
+ migrations/003_care_action_offer_fk.sql | 53 +++++++++++++++++++++++++++++++++
+ 2 files changed, 66 insertions(+), 1 deletion(-)

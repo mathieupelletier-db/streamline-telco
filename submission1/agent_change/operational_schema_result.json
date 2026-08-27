@@ -2,58 +2,47 @@
     "operational_tables": [
         "care_action_events",
         "care_actions",
-        "care_agents"
-    ],
-    "primary_keys": [
-        {
-            "table": "care_action_events",
-            "column": "event_id"
-        },
-        {
-            "table": "care_actions",
-            "column": "id"
-        },
-        {
-            "table": "care_agents",
-            "column": "agent_id"
-        }
+        "care_agents",
+        "care_offer_catalog"
     ],
     "foreign_keys": [
         {
-            "table": "care_action_events",
-            "column": "action_id",
-            "references": "care_actions.id"
+            "constraint": "fk_care_actions_agent",
+            "table": "care_actions",
+            "references": "care_agents"
         },
         {
+            "constraint": "fk_care_actions_offer",
             "table": "care_actions",
-            "column": "agent_id",
-            "references": "care_agents.agent_id"
+            "references": "care_offer_catalog"
+        },
+        {
+            "constraint": "care_action_events_action_id_fkey",
+            "table": "care_action_events",
+            "references": "care_actions"
         }
     ],
     "related_join_sample": [
         {
             "agent": "Mathieu Pelletier",
-            "team": "Customer Care & Retention",
             "subscriber_id": "SUB-0000214",
-            "offer_type": "bill_credit",
+            "offer_name": "One-Time Bill Credit $50",
             "status": "executed",
             "predicted_retained_clv_usd": 1357.19,
             "lifecycle_events": 1
         },
         {
             "agent": "Mathieu Pelletier",
-            "team": "Customer Care & Retention",
             "subscriber_id": "SUB-0000301",
-            "offer_type": "bill_credit",
+            "offer_name": "One-Time Bill Credit $50",
             "status": "executed",
             "predicted_retained_clv_usd": 1364.53,
             "lifecycle_events": 1
         },
         {
             "agent": "Mathieu Pelletier",
-            "team": "Customer Care & Retention",
             "subscriber_id": "SUB-0000412",
-            "offer_type": "bill_credit",
+            "offer_name": "One-Time Bill Credit $50",
             "status": "approved",
             "predicted_retained_clv_usd": 1312.44,
             "lifecycle_events": 1

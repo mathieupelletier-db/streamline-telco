@@ -1,7 +1,12 @@
-* b5824bd (HEAD -> main) Add operational-schema submission evidence + promotion-merge record
+* 156559b (HEAD -> main) Add PR-merge + offer-FK evidence to submission
+*   8574348 (origin/main, origin/HEAD) Merge pull request #1 from mathieupelletier-db/feature/care-action-offer-fk
+|\  
+| * c598099 (origin/feature/care-action-offer-fk, feature/care-action-offer-fk) Relate care_actions to the offer catalog with a foreign key
+|/  
+* 9f9e489 Add operational-schema submission evidence + promotion-merge record
 *   fb0c9d4 Merge feature/operational-schema: promote relational operational schema to main
 |\  
-| * 9650d5a (feature/operational-schema) Model operational schema for the domain (related tables + FKs)
+| * 9650d5a (origin/feature/operational-schema, feature/operational-schema) Model operational schema for the domain (related tables + FKs)
 |/  
 * 0fc5975 Use native Lakebase Search (BM25) for search evidence
 * 66b23fd Build 1 submission — Lakebase evidence bundle (submission1/)
@@ -9,6 +14,6 @@
 |\  
 | * e301bfe (dev-lakebase-care-analytics) Add care_action_analytics migration (dev branch)
 |/  
-* 9786d41 (origin/main, origin/HEAD) Milestone 2 — Lakebase serving + write surface
+* 9786d41 Milestone 2 — Lakebase serving + write surface
 * 54565d5 Milestone 1 — governed data layer (data, pipeline, MV, dashboard, Genie, ML)
 * f7bc672 Initial commit: Streamline Telco demo
