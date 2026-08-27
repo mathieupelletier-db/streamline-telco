@@ -21,5 +21,18 @@
       "genie-code"
     ]
   },
-  "created_resources": {}
+  "created_resources": {
+    "catalog": "ai_demo_gen",
+    "schema": "streamline_telco",
+    "raw_volume": "/Volumes/ai_demo_gen/streamline_telco/raw_data",
+    "profile": "DEFAULT",
+    "pipeline_id": "ab789a46-7046-473a-a335-82adc73d9273",
+    "pipeline_name": "streamline_subscriber_360",
+    "metric_view_name": "ai_demo_gen.streamline_telco.mv_subscriber_risk",
+    "dashboard_id": "01f1a22acd02121d9f741a0440a2b1d4",
+    "genie_space_id": "01f1a22b61531adeb4bfa89a5193ef65",
+    "warehouse_id": "e921c86338f3e272",
+    "ml_model_name": "ai_demo_gen.streamline_telco.churn_recommender",
+    "mlflow_experiment_path": "/Workspace/Users/mathieu.pelletier@databricks.com/streamline/experiments/churn_recommender"
+  }
 }

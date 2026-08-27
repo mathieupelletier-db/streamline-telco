@@ -1,0 +1,403 @@
+{
+  "datasets": [
+    {
+      "name": "ds_exposure",
+      "displayName": "Exposure (metric view)",
+      "queryLines": [
+        "SELECT plan_type, churn_reason, risk_band, home_metro,\n",
+        "       MEASURE(`clv_at_risk`)      AS clv_at_risk_usd,\n",
+        "       MEASURE(`open_tickets`)     AS open_tickets,\n",
+        "       MEASURE(`critical_count`)   AS critical_count,\n",
+        "       MEASURE(`atrisk_count`)     AS atrisk_count,\n",
+        "       MEASURE(`subscriber_count`) AS subscriber_count\n",
+        "FROM ai_demo_gen.streamline_telco.mv_subscriber_risk\n",
+        "GROUP BY ALL"
+      ]
+    },
+    {
+      "name": "ds_subscribers",
+      "displayName": "Subscriber position",
+      "queryLines": [
+        "SELECT subscriber_id, plan_type, tenure_months, monthly_arpu_usd,\n",
+        "       service_node_id, home_metro, sub_lat, sub_lng, risk_band,\n",
+        "       churn_risk_score, churn_reason, open_ticket_count, clv_at_risk_usd\n",
+        "FROM ai_demo_gen.streamline_telco.gold_subscriber_position\n",
+        "WHERE risk_band != 'healthy' OR rand() < 0.05"
+      ]
+    },
+    {
+      "name": "ds_retention",
+      "displayName": "Retention recommendations",
+      "queryLines": [
+        "SELECT subscriber_id, recommended_offer,\n",
+        "       predicted_retained_clv_usd, predicted_net_value_usd\n",
+        "FROM ai_demo_gen.streamline_telco.gold_retention_recommendations"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "retention",
+      "displayName": "Retention",
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1",
+      "layout": [
+        {
+          "widget": {
+            "name": "title_p1",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Streamline Retention\n",
+                "**Rae Nakamura, SVP Customer Care & Retention.** A node outage + billing friction ~3 weeks ago pushed a cluster of subscribers into churn risk (red = about to leave). This dashboard tracks the CLV at risk and the save."
+              ]
+            }
+          },
+          "position": {"x": 0, "y": 0, "width": 12, "height": 2}
+        },
+        {
+          "widget": {
+            "name": "kpi_clv_at_risk",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_exposure", "fields": [{"name": "sum(clv_at_risk_usd)", "expression": "SUM(`clv_at_risk_usd`)"}], "disaggregated": false}}],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "frame": {"title": "CLV at risk", "showTitle": true},
+              "encodings": {"value": {"fieldName": "sum(clv_at_risk_usd)", "displayName": "CLV at risk", "format": {"type": "number-currency", "currencyCode": "USD", "abbreviation": "compact", "decimalPlaces": {"type": "max", "places": 1}}, "style": {"color": {"hex": "#E5484D"}}}}
+            }
+          },
+          "position": {"x": 0, "y": 2, "width": 3, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "kpi_open_tickets",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_exposure", "fields": [{"name": "sum(open_tickets)", "expression": "SUM(`open_tickets`)"}], "disaggregated": false}}],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "frame": {"title": "Open tickets", "showTitle": true},
+              "encodings": {"value": {"fieldName": "sum(open_tickets)", "displayName": "Open tickets", "format": {"type": "number", "abbreviation": "compact"}, "style": {"color": {"hex": "#FFB020"}}}}
+            }
+          },
+          "position": {"x": 3, "y": 2, "width": 3, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "kpi_critical",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_exposure", "fields": [{"name": "sum(critical_count)", "expression": "SUM(`critical_count`)"}], "disaggregated": false}}],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "frame": {"title": "Critical subscribers", "showTitle": true},
+              "encodings": {"value": {"fieldName": "sum(critical_count)", "displayName": "Critical", "format": {"type": "number", "abbreviation": "compact"}, "style": {"color": {"hex": "#E5484D"}}}}
+            }
+          },
+          "position": {"x": 6, "y": 2, "width": 3, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "kpi_atrisk",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_exposure", "fields": [{"name": "sum(atrisk_count)", "expression": "SUM(`atrisk_count`)"}], "disaggregated": false}}],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "frame": {"title": "At-risk subscribers", "showTitle": true},
+              "encodings": {"value": {"fieldName": "sum(atrisk_count)", "displayName": "At-risk", "format": {"type": "number", "abbreviation": "compact"}, "style": {"color": {"hex": "#FFB020"}}}}
+            }
+          },
+          "position": {"x": 9, "y": 2, "width": 3, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "risk_scatter",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_subscribers", "fields": [
+              {"name": "tenure_months", "expression": "`tenure_months`"},
+              {"name": "churn_risk_score", "expression": "`churn_risk_score`"},
+              {"name": "risk_band", "expression": "`risk_band`"},
+              {"name": "monthly_arpu_usd", "expression": "`monthly_arpu_usd`"},
+              {"name": "subscriber_id", "expression": "`subscriber_id`"},
+              {"name": "plan_type", "expression": "`plan_type`"},
+              {"name": "churn_reason", "expression": "`churn_reason`"}
+            ], "disaggregated": true}}],
+            "spec": {
+              "version": 3,
+              "widgetType": "scatter",
+              "frame": {"title": "Churn risk vs tenure — the red cluster is the valuable subscribers about to leave (SUB-0000214 is the zoom target)", "showTitle": true},
+              "encodings": {
+                "x": {"fieldName": "tenure_months", "scale": {"type": "quantitative"}, "displayName": "Tenure (months)"},
+                "y": {"fieldName": "churn_risk_score", "scale": {"type": "quantitative"}, "displayName": "Churn risk"},
+                "size": {"fieldName": "monthly_arpu_usd", "scale": {"type": "quantitative"}, "displayName": "ARPU"},
+                "color": {"fieldName": "risk_band", "scale": {"type": "categorical", "mappings": [
+                  {"value": "critical", "color": "#E5484D"},
+                  {"value": "elevated", "color": "#FFB020"},
+                  {"value": "watch", "color": "#FFB020"},
+                  {"value": "healthy", "color": "#3C6997"}
+                ]}, "displayName": "Risk band"}
+              }
+            }
+          },
+          "position": {"x": 0, "y": 5, "width": 12, "height": 6}
+        },
+        {
+          "widget": {
+            "name": "atrisk_by_reason",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_exposure", "fields": [
+              {"name": "churn_reason", "expression": "`churn_reason`"},
+              {"name": "sum(atrisk_count)", "expression": "SUM(`atrisk_count`)"},
+              {"name": "risk_band", "expression": "`risk_band`"}
+            ], "disaggregated": false}}],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "frame": {"title": "At-risk subscribers by reason & band — service dominates the critical red", "showTitle": true},
+              "encodings": {
+                "x": {"fieldName": "churn_reason", "scale": {"type": "categorical"}, "displayName": "Churn reason"},
+                "y": {"fieldName": "sum(atrisk_count)", "scale": {"type": "quantitative"}, "displayName": "At-risk"},
+                "color": {"fieldName": "risk_band", "scale": {"type": "categorical", "mappings": [
+                  {"value": "critical", "color": "#E5484D"},
+                  {"value": "elevated", "color": "#FFB020"},
+                  {"value": "watch", "color": "#FFB020"},
+                  {"value": "healthy", "color": "#3C6997"}
+                ]}, "displayName": "Risk band"}
+              }
+            }
+          },
+          "position": {"x": 0, "y": 11, "width": 6, "height": 5}
+        },
+        {
+          "widget": {
+            "name": "clv_by_plan",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_exposure", "fields": [
+              {"name": "plan_type", "expression": "`plan_type`"},
+              {"name": "sum(clv_at_risk_usd)", "expression": "SUM(`clv_at_risk_usd`)"}
+            ], "disaggregated": false}}],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "frame": {"title": "CLV at risk by plan", "showTitle": true},
+              "encodings": {
+                "y": {"fieldName": "plan_type", "scale": {"type": "categorical"}, "displayName": "Plan"},
+                "x": {"fieldName": "sum(clv_at_risk_usd)", "scale": {"type": "quantitative"}, "displayName": "CLV at risk ($)"},
+                "color": {"fieldName": "plan_type", "scale": {"type": "categorical"}}
+              }
+            }
+          },
+          "position": {"x": 6, "y": 11, "width": 6, "height": 5}
+        }
+      ]
+    },
+    {
+      "name": "offers",
+      "displayName": "Offers",
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1",
+      "layout": [
+        {
+          "widget": {
+            "name": "title_p2",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Offers — what do we do about it?\n",
+                "The most at-risk subscribers, why they're leaving, and the model's recommended offer with the CLV it retains."
+              ]
+            }
+          },
+          "position": {"x": 0, "y": 0, "width": 12, "height": 2}
+        },
+        {
+          "widget": {
+            "name": "highest_clv_table",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_subscribers", "fields": [
+              {"name": "subscriber_id", "expression": "`subscriber_id`"},
+              {"name": "plan_type", "expression": "`plan_type`"},
+              {"name": "tenure_months", "expression": "`tenure_months`"},
+              {"name": "churn_reason", "expression": "`churn_reason`"},
+              {"name": "churn_risk_score", "expression": "`churn_risk_score`"},
+              {"name": "clv_at_risk_usd", "expression": "`clv_at_risk_usd`"},
+              {"name": "risk_band", "expression": "`risk_band`"}
+            ], "disaggregated": true, "orders": [{"direction": "DESC", "expression": "`clv_at_risk_usd`"}]}}],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "frame": {"title": "Highest CLV at risk (SUB-0000214 near the top)", "showTitle": true},
+              "encodings": {"columns": [
+                {"fieldName": "subscriber_id", "displayName": "Subscriber"},
+                {"fieldName": "plan_type", "displayName": "Plan"},
+                {"fieldName": "tenure_months", "displayName": "Tenure"},
+                {"fieldName": "churn_reason", "displayName": "Reason"},
+                {"fieldName": "churn_risk_score", "displayName": "Churn risk", "format": {"type": "number", "decimalPlaces": {"type": "exact", "places": 2}}},
+                {"fieldName": "clv_at_risk_usd", "displayName": "CLV at risk", "format": {"type": "number-currency", "currencyCode": "USD", "decimalPlaces": {"type": "exact", "places": 0}}}
+              ]}
+            }
+          },
+          "position": {"x": 0, "y": 2, "width": 6, "height": 6}
+        },
+        {
+          "widget": {
+            "name": "watch_table",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_subscribers", "fields": [
+              {"name": "subscriber_id", "expression": "`subscriber_id`"},
+              {"name": "plan_type", "expression": "`plan_type`"},
+              {"name": "churn_reason", "expression": "`churn_reason`"},
+              {"name": "churn_risk_score", "expression": "`churn_risk_score`"},
+              {"name": "risk_band", "expression": "`risk_band`"}
+            ], "disaggregated": true, "orders": [{"direction": "DESC", "expression": "`churn_risk_score`"}]}}],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "frame": {"title": "Rising-risk watch list", "showTitle": true},
+              "encodings": {"columns": [
+                {"fieldName": "subscriber_id", "displayName": "Subscriber"},
+                {"fieldName": "plan_type", "displayName": "Plan"},
+                {"fieldName": "churn_reason", "displayName": "Reason"},
+                {"fieldName": "churn_risk_score", "displayName": "Churn risk", "format": {"type": "number", "decimalPlaces": {"type": "exact", "places": 2}}},
+                {"fieldName": "risk_band", "displayName": "Band"}
+              ]}
+            }
+          },
+          "position": {"x": 6, "y": 2, "width": 6, "height": 6}
+        },
+        {
+          "widget": {
+            "name": "offer_mix",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_retention", "fields": [
+              {"name": "recommended_offer", "expression": "`recommended_offer`"},
+              {"name": "count(1)", "expression": "COUNT(`subscriber_id`)"}
+            ], "disaggregated": false}}],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "frame": {"title": "Recommended offer (mix) — bill credit dominates the service-reason cohort", "showTitle": true},
+              "encodings": {
+                "x": {"fieldName": "recommended_offer", "scale": {"type": "categorical"}, "displayName": "Recommended offer"},
+                "y": {"fieldName": "count(1)", "scale": {"type": "quantitative"}, "displayName": "Subscribers"},
+                "color": {"fieldName": "recommended_offer", "scale": {"type": "categorical", "mappings": [
+                  {"value": "bill_credit", "color": "#E5484D"},
+                  {"value": "plan_upgrade_discount", "color": "#3C6997"},
+                  {"value": "device_upgrade", "color": "#FFB020"}
+                ]}}
+              }
+            }
+          },
+          "position": {"x": 0, "y": 8, "width": 6, "height": 5}
+        },
+        {
+          "widget": {
+            "name": "kpi_predicted_retained",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_retention", "fields": [{"name": "sum(predicted_retained_clv_usd)", "expression": "SUM(`predicted_retained_clv_usd`)"}], "disaggregated": false}}],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "frame": {"title": "Total predicted retained CLV", "showTitle": true},
+              "encodings": {"value": {"fieldName": "sum(predicted_retained_clv_usd)", "displayName": "Predicted retained CLV", "format": {"type": "number-currency", "currencyCode": "USD", "abbreviation": "compact", "decimalPlaces": {"type": "max", "places": 1}}, "style": {"color": {"hex": "#094074"}}}}
+            }
+          },
+          "position": {"x": 6, "y": 8, "width": 6, "height": 5}
+        },
+        {
+          "widget": {
+            "name": "recommendations_table",
+            "queries": [{"name": "main_query", "query": {"datasetName": "ds_retention", "fields": [
+              {"name": "subscriber_id", "expression": "`subscriber_id`"},
+              {"name": "recommended_offer", "expression": "`recommended_offer`"},
+              {"name": "predicted_retained_clv_usd", "expression": "`predicted_retained_clv_usd`"},
+              {"name": "predicted_net_value_usd", "expression": "`predicted_net_value_usd`"}
+            ], "disaggregated": true, "orders": [{"direction": "DESC", "expression": "`predicted_net_value_usd`"}]}}],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "frame": {"title": "Retention recommendations", "showTitle": true},
+              "encodings": {"columns": [
+                {"fieldName": "subscriber_id", "displayName": "Subscriber"},
+                {"fieldName": "recommended_offer", "displayName": "Recommended offer"},
+                {"fieldName": "predicted_retained_clv_usd", "displayName": "Predicted retained CLV", "format": {"type": "number-currency", "currencyCode": "USD", "decimalPlaces": {"type": "exact", "places": 0}}},
+                {"fieldName": "predicted_net_value_usd", "displayName": "Net value", "format": {"type": "number-currency", "currencyCode": "USD", "decimalPlaces": {"type": "exact", "places": 0}}}
+              ]}
+            }
+          },
+          "position": {"x": 0, "y": 13, "width": 12, "height": 6}
+        }
+      ]
+    },
+    {
+      "name": "filters",
+      "displayName": "Filters",
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS",
+      "layoutVersion": "GRID_V1",
+      "layout": [
+        {
+          "widget": {
+            "name": "filter_plan",
+            "queries": [
+              {"name": "q_plan_exp", "query": {"datasetName": "ds_exposure", "fields": [{"name": "plan_type", "expression": "`plan_type`"}], "disaggregated": false}},
+              {"name": "q_plan_sub", "query": {"datasetName": "ds_subscribers", "fields": [{"name": "plan_type", "expression": "`plan_type`"}], "disaggregated": false}}
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "frame": {"title": "Plan", "showTitle": true},
+              "encodings": {"fields": [
+                {"fieldName": "plan_type", "queryName": "q_plan_exp", "displayName": "Plan"},
+                {"fieldName": "plan_type", "queryName": "q_plan_sub"}
+              ]}
+            }
+          },
+          "position": {"x": 0, "y": 0, "width": 4, "height": 2}
+        },
+        {
+          "widget": {
+            "name": "filter_reason",
+            "queries": [
+              {"name": "q_reason_exp", "query": {"datasetName": "ds_exposure", "fields": [{"name": "churn_reason", "expression": "`churn_reason`"}], "disaggregated": false}},
+              {"name": "q_reason_sub", "query": {"datasetName": "ds_subscribers", "fields": [{"name": "churn_reason", "expression": "`churn_reason`"}], "disaggregated": false}}
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "frame": {"title": "Churn reason", "showTitle": true},
+              "encodings": {"fields": [
+                {"fieldName": "churn_reason", "queryName": "q_reason_exp", "displayName": "Churn reason"},
+                {"fieldName": "churn_reason", "queryName": "q_reason_sub"}
+              ]}
+            }
+          },
+          "position": {"x": 4, "y": 0, "width": 4, "height": 2}
+        },
+        {
+          "widget": {
+            "name": "filter_band",
+            "queries": [
+              {"name": "q_band_exp", "query": {"datasetName": "ds_exposure", "fields": [{"name": "risk_band", "expression": "`risk_band`"}], "disaggregated": false}},
+              {"name": "q_band_sub", "query": {"datasetName": "ds_subscribers", "fields": [{"name": "risk_band", "expression": "`risk_band`"}], "disaggregated": false}}
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "frame": {"title": "Risk band", "showTitle": true},
+              "encodings": {"fields": [
+                {"fieldName": "risk_band", "queryName": "q_band_exp", "displayName": "Risk band"},
+                {"fieldName": "risk_band", "queryName": "q_band_sub"}
+              ]}
+            }
+          },
+          "position": {"x": 8, "y": 0, "width": 4, "height": 2}
+        }
+      ]
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "canvasBackgroundColor": {"light": "#F5F7FB", "dark": "#0F1419"},
+      "widgetBackgroundColor": {"light": "#FFFFFF", "dark": "#161B22"},
+      "widgetBorderColor": {"light": "#FFFFFF", "dark": "#161B22"},
+      "fontColor": {"light": "#1F2530", "dark": "#E8ECF0"},
+      "selectionColor": {"light": "#4F7CE3", "dark": "#8ACAFF"},
+      "visualizationColors": ["#094074", "#3C6997", "#5ADBFF", "#FFB020", "#E5484D"],
+      "widgetHeaderAlignment": "LEFT"
+    },
+    "genieSpace": {
+      "isEnabled": true,
+      "overrideId": "01f1a22b61531adeb4bfa89a5193ef65",
+      "enablementMode": "ENABLED"
+    }
+  }
+}

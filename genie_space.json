@@ -1,0 +1,224 @@
+{
+  "version": 2,
+  "config": {
+    "sample_questions": [
+      {
+        "id": "b8804d2b111df2a0bf72a3432a2aeb26",
+        "question": [
+          "What's our CLV at risk right now, and how many open tickets?"
+        ]
+      },
+      {
+        "id": "8e07fe5e232ed81bf8162d6a68561c3c",
+        "question": [
+          "What's driving the churn risk \u2014 by reason?"
+        ]
+      },
+      {
+        "id": "fb27a49ef6515baf4f75f19d7422576b",
+        "question": [
+          "Which service node are the at-risk subscribers on?"
+        ]
+      },
+      {
+        "id": "1785d4c40cffd658ef7937292d0e3185",
+        "question": [
+          "SUB-0000214 is at risk \u2014 why, and how much is at stake?"
+        ]
+      },
+      {
+        "id": "59cf50661ba88703e2b912128d8507e2",
+        "question": [
+          "What should I offer SUB-0000214, and how much would it retain?"
+        ]
+      },
+      {
+        "id": "68240354027f53a2b00400d5ea417563",
+        "question": [
+          "Across all at-risk subscribers, how much CLV could we retain, and by which offer?"
+        ]
+      },
+      {
+        "id": "eabd7e1818e9e1129271d4190ee82167",
+        "question": [
+          "Which subscribers are best served by a plan discount instead?"
+        ]
+      }
+    ]
+  },
+  "data_sources": {
+    "tables": [
+      {
+        "identifier": "ai_demo_gen.streamline_telco.gold_open_atrisk",
+        "description": [
+          "The current at-risk book (critical/elevated/watch). Per subscriber: churn_risk_score, clv_at_risk_usd, churn_reason, has_open_outage, has_open_billing, monthly_arpu_usd, candidate_offer_id (the offer matching the reason)."
+        ]
+      },
+      {
+        "identifier": "ai_demo_gen.streamline_telco.gold_retention_recommendations",
+        "description": [
+          "The ranked retention offer per at-risk subscriber: recommended_offer (bill_credit/plan_upgrade_discount/device_upgrade), predicted_retained_clv_usd, predicted_net_value_usd, offer_ranking (JSON of all three options)."
+        ]
+      },
+      {
+        "identifier": "ai_demo_gen.streamline_telco.gold_subscriber_position",
+        "description": [
+          "One row per subscriber, current position: plan, tenure, ARPU, service_node_id, geo (sub_lat/sub_lng), churn_risk_score, churn_reason, open_ticket_count, has_open_outage/billing, clv_at_risk_usd, risk_band (critical/elevated/watch/healthy)."
+        ]
+      },
+      {
+        "identifier": "ai_demo_gen.streamline_telco.mv_subscriber_risk",
+        "description": [
+          "Canonical churn-exposure metric view over gold_subscriber_position. Use MEASURE() for clv_at_risk, open_tickets, critical_count, elevated_count, atrisk_count, subscriber_count. Dimensions: plan_type, churn_reason, risk_band, home_metro, service_node_id, subscriber_id. This is the source of truth for all headline KPIs."
+        ]
+      },
+      {
+        "identifier": "ai_demo_gen.streamline_telco.raw_offers",
+        "description": [
+          "The retention/plan offer catalog: offer_id, offer_name, offer_type, value_usd, segment, description (searchable)."
+        ]
+      },
+      {
+        "identifier": "ai_demo_gen.streamline_telco.raw_subscribers",
+        "description": [
+          "Subscriber master: subscriber_id, plan_type, tenure_months, monthly_arpu_usd, service_node_id, home_metro, state, geo, service_summary."
+        ]
+      }
+    ]
+  },
+  "instructions": {
+    "text_instructions": [
+      {
+        "id": "fad58de7366495db4650cfefac2fcd61",
+        "content": [
+          "## PURPOSE\n",
+          "You analyze Streamline Telco subscriber-retention data for Rae Nakamura (SVP Customer Care & Retention, non-technical).\n",
+          "## WHAT HAPPENED\n",
+          "A network outage on NODE-OHIO-14 ~3 weeks ago collided with billing friction, pushing a cluster of subscribers into churn risk \u2014 ~200 critical subscribers with open tickets \u2014 while the rest of the ~40K-subscriber sample is stable. Every at-risk subscriber's churn REASON is 'service' (the outage + billing), grounded in a real ticket/dispute/node-event; the right retention offer (a bill credit) matches that reason.\n",
+          "## WHAT TO HELP RAE DO\n",
+          "Find the at-risk subscribers, explain WHY they are at risk, and rank the right retention offer (bill credit vs plan discount vs device upgrade) by retained CLV. Conclude and offer the next step.\n",
+          "## TONE\n",
+          "Concise, business-first, no jargon. Lead with the number or the recommendation.\n",
+          "## BASELINES\n",
+          "A stable subscriber sits at churn_risk_score ~0.03-0.2. risk_band is the single signal: 'critical' (risk >= 0.75 with an open ticket), 'elevated' (>= 0.6), 'watch' (>= 0.4), 'healthy'. churn_reason is 'service' for every at-risk subscriber (the 'price'/'device' values are part of the enum and appear in the historical retention-offer outcomes, not the current at-risk book).\n",
+          "## HEADLINE NUMBERS \u2014 always answer from mv_subscriber_risk\n",
+          "- 'What's our CLV at risk?' -> MEASURE(clv_at_risk)\n",
+          "- 'How many open tickets?' -> MEASURE(open_tickets)\n",
+          "- 'How many subscribers are critical?' -> MEASURE(critical_count)\n",
+          "## INVESTIGATION FLOW for 'who is at risk and why?'\n",
+          "1. mv_subscriber_risk -> MEASURE(critical_count) + MEASURE(atrisk_count) by churn_reason -> service dominates.\n",
+          "2. gold_subscriber_position -> the at-risk cluster is on the outage node with open tickets (GROUP BY service_node_id, risk_band).\n",
+          "3. gold_open_atrisk WHERE subscriber_id='SUB-0000214' -> the hero: service reason, open ticket, high risk.\n",
+          "4. gold_retention_recommendations -> the recommended offer (bill_credit) + predicted retained CLV.\n",
+          "Conclude and suggest: 'Want me to rank the offer for SUB-0000214?'\n",
+          "## OFFER FOLLOW-UP\n",
+          "- 'What should I offer SUB-0000214?' -> gold_retention_recommendations -> recommended_offer + predicted_retained_clv_usd + the offer_ranking options.\n",
+          "- 'How much CLV could we retain across all at-risk subscribers?' -> SUM(predicted_retained_clv_usd).\n",
+          "- 'How many are best served by a bill credit vs a plan discount?' -> GROUP BY recommended_offer.\n"
+        ]
+      }
+    ]
+  },
+  "benchmarks": {
+    "questions": [
+      {
+        "id": "9e8944749197512810b1cbff6f4c6b7f",
+        "question": [
+          "What's our CLV at risk right now, and how many open tickets?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT MEASURE(`clv_at_risk`) AS clv_at_risk, MEASURE(`open_tickets`) AS open_tickets FROM ai_demo_gen.streamline_telco.mv_subscriber_risk"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "03c987a321a5060b9a7a2cec053c997a",
+        "question": [
+          "What's driving the churn risk by reason?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT churn_reason, MEASURE(`atrisk_count`) AS atrisk_count FROM ai_demo_gen.streamline_telco.mv_subscriber_risk GROUP BY churn_reason ORDER BY atrisk_count DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "075f9e6af2c4aeb0feb5e7dba0a2e0e9",
+        "question": [
+          "Which service node are the at-risk subscribers on?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT service_node_id, risk_band, COUNT(*) AS subscribers FROM ai_demo_gen.streamline_telco.gold_subscriber_position WHERE risk_band IN ('critical','elevated') GROUP BY service_node_id, risk_band ORDER BY subscribers DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "7f292a9d10f79a790f566ece00858d9d",
+        "question": [
+          "Why is SUB-0000214 at risk, and how much is at stake?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT subscriber_id, churn_reason, churn_risk_score, clv_at_risk_usd, has_open_outage, has_open_billing FROM ai_demo_gen.streamline_telco.gold_open_atrisk WHERE subscriber_id='SUB-0000214'"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "aff6ede20cd3eb4188c2ea343271401c",
+        "question": [
+          "What should I offer SUB-0000214, and how much would it retain?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT subscriber_id, recommended_offer, predicted_retained_clv_usd, predicted_net_value_usd, offer_ranking FROM ai_demo_gen.streamline_telco.gold_retention_recommendations WHERE subscriber_id='SUB-0000214'"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "05b60ffe66832f18954e8ca03dcd4b7b",
+        "question": [
+          "Across all at-risk subscribers, how much CLV could we retain, and by which offer?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT recommended_offer, COUNT(*) AS subscribers, SUM(predicted_retained_clv_usd) AS total_retained_clv FROM ai_demo_gen.streamline_telco.gold_retention_recommendations GROUP BY recommended_offer ORDER BY subscribers DESC"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "c55dc85a1b2074a7aca12f2ac3052840",
+        "question": [
+          "Which subscribers are best served by a plan discount instead?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT r.subscriber_id, r.predicted_retained_clv_usd, a.churn_reason FROM ai_demo_gen.streamline_telco.gold_retention_recommendations r JOIN ai_demo_gen.streamline_telco.gold_open_atrisk a ON r.subscriber_id=a.subscriber_id WHERE r.recommended_offer='plan_upgrade_discount'"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
