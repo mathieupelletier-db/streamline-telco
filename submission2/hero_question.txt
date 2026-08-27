@@ -1,0 +1,31 @@
+HERO QUESTION (Rae Nakamura, SVP Customer Care & Retention):
+
+  "Why is SUB-0002373 at risk of churning, and what should I offer?"
+
+Answered as a DECISION (surface -> prescribe -> approve -> act), not a lookup or a dashboard.
+
+THE DECISION CHAIN — linked record IDs across the submission2 exports:
+
+1. SURFACE (Layer 1 Visualize)
+   - Live ranked view: view_query.sql / view_result.json
+   - subscriber_id = SUB-0002373 (critical, service reason, on NODE-OHIO-14)
+   - Trigger event (schedule re-scored the view): workflow_state.event_id = 58c4a27b-145b-4259-9813-4d45d27a18b5
+     -> state_table.json (event_type='view_scored', source='schedule')
+
+2. PRESCRIBE (Layer 2 Assist) — grounded on Lakebase Search BM25 retrieval
+   - Explanation + what-if + drafted memo for SUB-0002373: assist_log.jsonl (subscriber_id=SUB-0002373)
+   - Auto-drafted call-resolution memo: drafted_sample.md
+   - Recommended offer: bill_credit (predicted retained CLV ~$1,364)
+
+3. APPROVE + ACT (Layer 3) — human-in-the-loop writeback, closed loop
+   - care_actions.action_id = 3ca4822e-6d20-412a-a05c-9eaaba9266a0  -> writeback_table.json
+       status: proposed -> executed; approver = rae.nakamura@streamline.example
+       created_at (proposed) and committed_at (approved) timestamps recorded
+   - Decision events in state_table.json:
+       action_proposed  event_id = 6052d139-5eae-42db-b137-343357439f80
+       action_committed event_id = 43d3544c-6b29-4823-8de2-6995069a6e8d
+   - Closed loop: SUB-0002373 now reads back action_status='executed' in view_result.json
+
+Every step writes ONLY to writable Postgres tables (care_actions, care_action_events,
+workflow_state); the synced UC tables (subscriber_position, retention_recommendations) are
+read-only. The committed decision is reflected on the next read of the live view.

@@ -1,0 +1,74 @@
+[
+    {
+        "action_id": "97cd18bf-026c-4bc5-8c60-89fcd0b4da22",
+        "subscriber_id": "SUB-0000214",
+        "offer_type": "bill_credit",
+        "offer_id": "OFFER-001",
+        "status": "executed",
+        "approver": "mathieu.pelletier@databricks.com",
+        "predicted_retained_clv_usd": 1357.19,
+        "created_at": "2026-08-27T16:11:09.958566+00:00",
+        "committed_at": "2026-08-27T16:24:18.935618+00:00",
+        "drafted_summary": "Applied one-time bill credit acknowledging the NODE-OHIO-14 outage + billing dispute."
+    },
+    {
+        "action_id": "1d3e9cfa-dc01-408b-aa18-6a6090bb83b3",
+        "subscriber_id": "SUB-0000301",
+        "offer_type": "bill_credit",
+        "offer_id": "OFFER-001",
+        "status": "executed",
+        "approver": "mathieu.pelletier@databricks.com",
+        "predicted_retained_clv_usd": 1364.53,
+        "created_at": "2026-08-27T16:11:09.958566+00:00",
+        "committed_at": "2026-08-27T16:11:09.958566+00:00",
+        "drafted_summary": "Bill credit for outage-affected bundle subscriber."
+    },
+    {
+        "action_id": "8b521d91-3d13-44bb-ad53-a36c62f61170",
+        "subscriber_id": "SUB-0000412",
+        "offer_type": "bill_credit",
+        "offer_id": "OFFER-001",
+        "status": "approved",
+        "approver": "mathieu.pelletier@databricks.com",
+        "predicted_retained_clv_usd": 1312.44,
+        "created_at": "2026-08-27T16:25:44.57984+00:00",
+        "committed_at": "2026-08-27T16:25:44.57984+00:00",
+        "drafted_summary": "Bill credit for outage-affected mobile subscriber."
+    },
+    {
+        "action_id": "b7e18b12-f39d-48c8-b511-3c77bb3d2550",
+        "subscriber_id": "SUB-0007220",
+        "offer_type": "bill_credit",
+        "offer_id": "OFFER-001",
+        "status": "executed",
+        "approver": "mathieu.pelletier@databricks.com",
+        "predicted_retained_clv_usd": 1301.55,
+        "created_at": "2026-08-27T17:18:47.690365+00:00",
+        "committed_at": "2026-08-27T18:09:53.546363+00:00",
+        "drafted_summary": "Bill credit for NODE-OHIO-14 outage + billing dispute."
+    },
+    {
+        "action_id": "c9fb872e-0468-4676-9b29-270b86c67d04",
+        "subscriber_id": "SUB-0000214",
+        "offer_type": "bill_credit",
+        "offer_id": "OFFER-001",
+        "status": "executed",
+        "approver": "rae.nakamura@streamline.example",
+        "predicted_retained_clv_usd": 1357.19,
+        "created_at": "2026-08-27T18:22:41.179248+00:00",
+        "committed_at": "2026-08-27T18:22:41.952306+00:00",
+        "drafted_summary": "One-time bill credit acknowledging the NODE-OHIO-14 outage + billing dispute; retains ~$1.36K CLV."
+    },
+    {
+        "action_id": "3ca4822e-6d20-412a-a05c-9eaaba9266a0",
+        "subscriber_id": "SUB-0002373",
+        "offer_type": "bill_credit",
+        "offer_id": "OFFER-001",
+        "status": "executed",
+        "approver": "rae.nakamura@streamline.example",
+        "predicted_retained_clv_usd": 1364.53,
+        "created_at": "2026-08-27T18:41:37.280064+00:00",
+        "committed_at": "2026-08-27T18:41:38.107822+00:00",
+        "drafted_summary": "# Call Resolution Memo  **Date:** [Current Date]   **Subscriber ID:** SUB-0002373   **Prepared for:** Care Lead Approval  ---  ## Situation Summary  - **Account Type:** Bundle subscriber - **Tenure:** 53 months (4+ years) - **Location:** Columbus market - **Cancellation Reason:** Service issues - **"
+    }
+]
