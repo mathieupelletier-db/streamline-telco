@@ -2,32 +2,30 @@ HERO QUESTION (Rae Nakamura, SVP Customer Care & Retention):
 
   "Why is SUB-0002373 at risk of churning, and what should I offer?"
 
-Answered as a DECISION (surface -> prescribe -> approve -> act) by the deployed Databricks App:
-  https://streamline-care-desk-7405612117836809.9.azure.databricksapps.com
-Built on the Build-1 DEV branch (git: feature/build2-app off main; Lakebase: branch 'dev'),
-keeping main/production clean to demo from.
+Answered as a DECISION (surface -> prescribe -> approve -> act) by the Streamline Care Desk —
+the real @databricks/appkit template app (app/), Build-2/3 agent tools implemented in
+server/agent/caredesk.ts + server/db/queries/subscribers.ts. Built + run on the Build-1 DEV branch
+(git: feature/build2-app off main; Lakebase: branch 'dev'), keeping main/production clean.
 
 THE DECISION CHAIN — linked record IDs across the submission2 exports:
 
-1. SURFACE (Layer 1 Visualize) — reads the read-only synced UC tables
-   - Live ranked view: view_query.sql / view_result.json ; subscriber_id = SUB-0002373
-   - Scheduled trigger re-scored the view: workflow_state.event_id = 586b73c6-7e17-4ed7-9f49-40415dd50abe
-     (state_table.json: event_type='view_scored', source='schedule')
+1. SURFACE (Layer 1 Visualize) — Care Desk queue reads the read-only synced mirrors
+   (app.subscriber_position ⋈ app.retention_recommendations). view_query.sql / view_result.json.
+   subscriber_id = SUB-0002373 (critical, service reason, on NODE-OHIO-14).
 
-2. PRESCRIBE (Layer 2 Assist) — grounded on the Build-1 Lakebase Search BM25 index
-   (lakebase_bm25 over offer_search + service_history_search; NOT a separate vector store)
-   - explain + what-if + drafted memo: assist_log.jsonl (subscriber_id=SUB-0002373)
-   - auto-drafted memo: drafted_sample.md
-   - recommended offer: bill_credit
+2. PRESCRIBE (Layer 2 Assist) — the OpenAI-Agents loop over Databricks Claude:
+   - find_atrisk_subscriber -> live position (service reason, risk, open ticket, CLV)
+   - search_history -> grounded on the Build-1 Lakebase Search BM25 index (lakebase_text),
+     NOT a separate vector store
+   - rank_offers -> the ML recommendation (bill_credit) + all three ranked options
+   assist_log.jsonl records the explain + what-if + draft turns (tool_calls + tool_outputs +
+   model responses). drafted_sample.md is the auto-drafted call-resolution memo.
 
-3. APPROVE + ACT (Layer 3) — human-in-the-loop writeback, closed loop
-   - care_actions.action_id = 5a1ef849-f933-4900-a25b-b5aa6ffcdff6  -> writeback_table.json
-       status proposed -> executed ; approver = rae.nakamura@streamline.example
-       created_at (proposed) + committed_at (approved) recorded
-   - decision events in state_table.json:
-       action_proposed  event_id = bb26e715-2ea3-41ea-ae8e-3c614379b6d2
-       action_committed event_id = e25ec595-7937-446c-9f07-186c10a05755
-   - closed loop: SUB-0002373 reads back action_status='executed' in view_result.json
+3. APPROVE + ACT (Layer 3) — human-in-the-loop write via execute_retention_action:
+   - app.care_actions.action_id = 21eebef3-d26a-437d-9cba-e542199c9423  -> writeback_table.json
+       status = approved ; approver = rae/OBO user
+   - lifecycle event app.care_action_events.event_id = 84041c50-5953-430f-822b-5ec06f7da191  -> state_table.json
+   - closed loop: SUB-0002373 reads back action_status='approved' in view_result.json
 
-Writes ONLY the writable Postgres tables (care_actions, care_action_events, workflow_state);
-the synced UC tables (subscriber_position, retention_recommendations) are read-only.
+Writes ONLY the writable Postgres tables (app.care_actions, app.care_action_events); the synced
+UC mirrors (subscriber_position, retention_recommendations, offers) are read-only.
