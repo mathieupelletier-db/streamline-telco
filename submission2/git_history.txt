@@ -1,4 +1,6 @@
-* 3fdefe9 (HEAD -> feature/build2-app) Add submission2 README + git history for Build 2
+* cf66d24 (HEAD -> feature/build2-app) Refresh submission2 evidence from the deployed app (dev branch)
+* df524c0 Deploy Build 2 app to Databricks Apps (dev branch) + SDK-free auth
+* 34a7c04 (origin/feature/build2-app) Add submission2 README + git history for Build 2
 * ac0172c Build 2 Layer 3 — Act: human-approved writeback + closed loop; submission2 evidence
 * 1cccd63 Build 2 Layer 2 — Assist: explain + what-if + draft, grounded on Lakebase Search BM25
 * 568d720 Build 2 Layer 1 — Visualize: live ranked at-risk view + scheduled trigger

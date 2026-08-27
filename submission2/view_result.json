@@ -141,19 +141,19 @@
         "clv_at_risk_usd": 2323.84,
         "recommended_offer": "bill_credit",
         "predicted_retained_clv_usd": 1357.19,
-        "action_status": "executed"
+        "action_status": "approved"
     },
     {
-        "subscriber_id": "SUB-0007220",
+        "subscriber_id": "SUB-0000375",
         "plan_type": "mobile",
         "home_metro": "Columbus",
-        "churn_risk_score": 0.78,
+        "churn_risk_score": 0.928,
         "churn_reason": "service",
         "risk_band": "critical",
-        "clv_at_risk_usd": 1524.18,
+        "clv_at_risk_usd": 1747.68,
         "recommended_offer": "bill_credit",
-        "predicted_retained_clv_usd": 926.37,
-        "action_status": "executed"
+        "predicted_retained_clv_usd": 909.7,
+        "action_status": "proposed"
     },
     {
         "subscriber_id": "SUB-0000301",
@@ -165,18 +165,6 @@
         "clv_at_risk_usd": 1163.81,
         "recommended_offer": "bill_credit",
         "predicted_retained_clv_usd": 639.4,
-        "action_status": "executed"
-    },
-    {
-        "subscriber_id": "SUB-0000412",
-        "plan_type": "mobile",
-        "home_metro": "Columbus",
-        "churn_risk_score": 0.911,
-        "churn_reason": "service",
-        "risk_band": "critical",
-        "clv_at_risk_usd": 1058,
-        "recommended_offer": "bill_credit",
-        "predicted_retained_clv_usd": 607.97,
         "action_status": "approved"
     }
 ]

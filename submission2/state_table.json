@@ -1,213 +1,142 @@
 [
     {
-        "event_id": "6d98c5ae-19c1-4314-84b9-ca504e89e879",
+        "event_id": "28b6193a-ecb0-4d07-a9c4-b7028e1640f6",
         "event_kind": "trigger",
         "event_type": "view_scored",
-        "source": "system_update",
+        "source": "schedule",
         "subscriber_id": "SUB-0003372",
         "action_id": null,
         "detail": {
-            "open_unactioned": 196,
+            "open_unactioned": 197,
             "top_subscriber_id": "SUB-0003372",
             "subscribers_scored": 200,
             "total_clv_at_risk_usd": 353377.08
         },
-        "created_at": "2026-08-27T18:20:03.80037+00:00"
+        "created_at": "2026-08-27T19:15:43.97722+00:00"
     },
     {
-        "event_id": "f40f1829-679c-4a36-920a-baa43fe4e5ad",
+        "event_id": "ded0582d-a34b-4d10-b51c-f5097f976350",
         "event_kind": "trigger",
         "event_type": "assist_explain",
         "source": "app_user",
         "subscriber_id": "SUB-0000214",
         "action_id": null,
         "detail": {
-            "ts": "2026-08-27T18:21:56.882865+00:00",
+            "ts": "2026-08-27T19:15:49.541239+00:00",
             "type": "assist_explain",
             "model": "databricks-claude-sonnet-4-5",
             "request": {
                 "subscriber_id": "SUB-0000214",
                 "retrieval_query": "Subscriber SUB-0000214: plan=broadband, tenure=60mo, risk=0.84, band=critical, reason=service, open_tickets=1, outage=False, billing_dispute=True, CLV_at_risk=$2323.84.\n\nRetrieved service history (Lak"
             },
-            "response": "Subscriber SUB-0000214 is at critical churn risk (0.84) primarily due to an ongoing billing dispute combined with an open service ticket, despite being a loyal 5-year customer on a broadband plan. The billing dispute suggests unresolved payment or charge concerns that are eroding trust, while the concurrent service issue compounds their frustration. With $2,323.84 in customer lifetime value at stake, this long-tenured subscriber's patience appears exhausted by the combination of service and billing problems that remain unresolved.",
+            "response": "Subscriber SUB-0000214 is at critical churn risk (0.84) primarily due to an ongoing billing dispute combined with an open service ticket, despite no recent outage on their node. With 60 months of tenure, this long-term broadband customer is experiencing service-related issues that have escalated to a billing conflict, putting $2,323.84 in CLV at risk. The combination of unresolved service problems and financial disagreement creates a particularly volatile situation that threatens this otherwise stable, long-tenured relationship.",
             "retrieved": [
                 {
                     "risk_band": "critical",
                     "bm25_score": -32.1034,
                     "home_metro": "Columbus",
                     "churn_reason": "service",
-                    "subscriber_id": "SUB-0004260",
-                    "service_summary": "mobile plan, 21 months tenure, node NODE-OHIO-14 . Recent outage on their node and a billing dispute; open ticket, elevated churn risk."
+                    "subscriber_id": "SUB-0003446",
+                    "service_summary": "mobile plan, 37 months tenure, node NODE-OHIO-14 . Recent outage on their node and a billing dispute; open ticket, elevated churn risk."
                 },
                 {
                     "risk_band": "critical",
                     "bm25_score": -32.1034,
                     "home_metro": "Columbus",
                     "churn_reason": "service",
-                    "subscriber_id": "SUB-0001448",
-                    "service_summary": "mobile plan, 18 months tenure, node NODE-OHIO-14 . Recent outage on their node and a billing dispute; open ticket, elevated churn risk."
+                    "subscriber_id": "SUB-0002595",
+                    "service_summary": "bundle plan, 82 months tenure, node NODE-OHIO-14 . Recent outage on their node and a billing dispute; open ticket, elevated churn risk."
                 },
                 {
                     "risk_band": "critical",
                     "bm25_score": -32.1034,
                     "home_metro": "Columbus",
                     "churn_reason": "service",
-                    "subscriber_id": "SUB-0006036",
-                    "service_summary": "bundle plan, 81 months tenure, node NODE-OHIO-14 . Recent outage on their node and a billing dispute; open ticket, elevated churn risk."
+                    "subscriber_id": "SUB-0002262",
+                    "service_summary": "mobile plan, 6 months tenure, node NODE-OHIO-14 . Recent outage on their node and a billing dispute; open ticket, elevated churn risk."
                 }
             ],
             "subscriber_id": "SUB-0000214"
         },
-        "created_at": "2026-08-27T18:21:57.065951+00:00"
+        "created_at": "2026-08-27T19:15:49.543004+00:00"
     },
     {
-        "event_id": "4efaa2b9-bbf0-4e52-ab72-0801819e62ff",
+        "event_id": "ef6e0d6a-35f5-48e2-81fd-d2f24591ef9d",
         "event_kind": "trigger",
-        "event_type": "assist_whatif",
-        "source": "app_user",
-        "subscriber_id": "SUB-0000214",
+        "event_type": "view_scored",
+        "source": "schedule",
+        "subscriber_id": "SUB-0003372",
         "action_id": null,
         "detail": {
-            "ts": "2026-08-27T18:22:14.161781+00:00",
-            "type": "assist_whatif",
-            "model": "databricks-claude-sonnet-4-5",
-            "request": {
-                "scenario": "What if we offer a plan discount instead of the bill credit? Compare retained CLV.",
-                "subscriber_id": "SUB-0000214"
-            },
-            "response": "# What-If Analysis: Plan Discount vs. Bill Credit\n\n**Plan Upgrade Discount:**\n- Predicted Retained CLV: **$259.91**\n- Net Value: **-$16.74**\n\n**Bill Credit (Current Recommendation):**\n- Predicted Retained CLV: **$1,357.19**\n- Net Value: **$1,307.19**\n\n**Comparison:**\nSwitching to the plan discount would result in **$1,097.28 less** in retained CLV ($1,357.19 - $259.91). The plan discount also produces a negative net value, meaning it costs more than the predicted return. The bill credit is significantly superior for this subscriber.\n\n**Recommendation:** Stay with the bill credit offer.",
-            "offer_ranking": [
-                {
-                    "costUsd": 50.0,
-                    "offerType": "bill_credit",
-                    "predictedNetValueUsd": 1307.19,
-                    "predictedRetainedClvUsd": 1357.19
-                },
-                {
-                    "costUsd": 300.0,
-                    "offerType": "device_upgrade",
-                    "predictedNetValueUsd": 4.13,
-                    "predictedRetainedClvUsd": 304.13
-                },
-                {
-                    "costUsd": 276.65,
-                    "offerType": "plan_upgrade_discount",
-                    "predictedNetValueUsd": -16.74,
-                    "predictedRetainedClvUsd": 259.91
-                }
-            ],
-            "subscriber_id": "SUB-0000214"
+            "open_unactioned": 197,
+            "top_subscriber_id": "SUB-0003372",
+            "subscribers_scored": 200,
+            "total_clv_at_risk_usd": 353377.08
         },
-        "created_at": "2026-08-27T18:22:14.346076+00:00"
+        "created_at": "2026-08-27T19:16:09.503754+00:00"
     },
     {
-        "event_id": "eda47647-6e92-4b70-8214-4cba0e66bf6b",
-        "event_kind": "trigger",
-        "event_type": "assist_draft",
-        "source": "app_user",
-        "subscriber_id": "SUB-0000214",
-        "action_id": null,
-        "detail": {
-            "ts": "2026-08-27T18:22:23.848748+00:00",
-            "type": "assist_draft",
-            "model": "databricks-claude-sonnet-4-5",
-            "request": {
-                "subscriber_id": "SUB-0000214"
-            },
-            "response": "# Call Resolution Memo\n\n**Date:** [Current Date]  \n**Subscriber ID:** SUB-0000214  \n**Location:** Columbus  \n**Account Tenure:** 60 months  \n**Service Type:** Broadband\n\n---\n\n## Situation\nLong-term subscriber (5 years) contacted support regarding service issues. Churn risk assessment indicates **84% probability of cancellation** if issue remains unresolved.\n\n## Why This Matters\n- Established customer with 5-year relationship\n- Predicted retained CLV: **$1,357.19**\n- Service quality concerns threaten immediate cancellation\n- High retention value justifies proactive intervention\n\n## Recommended Offer\n**One-Time Bill Credit: $50**\n\nThis offer:\n- Addresses immediate dissatisfaction with tangible compensation\n- Represents 3.7% of retained CLV (strong ROI)\n- Aligns with catalog-approved retention tools\n- Demonstrates accountability for service disruption\n\n## Expected Outcome\nRetained CLV of $1,357.19 over remaining customer lifetime, representing significant value preservation for minimal investment.\n\n## Next Step\n**Awaiting approval** to apply $50 bill credit to account and schedule technical follow-up to resolve underlying service issues.\n\n---\n\n**Prepared for Care Lead Review**",
-            "subscriber_id": "SUB-0000214"
-        },
-        "created_at": "2026-08-27T18:22:24.032391+00:00"
-    },
-    {
-        "event_id": "4f8fd535-b9b0-4815-bcec-fc068ed8de5e",
-        "event_kind": "decision",
-        "event_type": "action_proposed",
-        "source": "app_user",
-        "subscriber_id": "SUB-0000214",
-        "action_id": "c9fb872e-0468-4676-9b29-270b86c67d04",
-        "detail": {
-            "by": "rae.nakamura@streamline.example",
-            "offer_type": "bill_credit"
-        },
-        "created_at": "2026-08-27T18:22:41.387311+00:00"
-    },
-    {
-        "event_id": "467fd058-1beb-4c1b-9933-d87c9ce4b169",
-        "event_kind": "decision",
-        "event_type": "action_committed",
-        "source": "app_user",
-        "subscriber_id": "SUB-0000214",
-        "action_id": "c9fb872e-0468-4676-9b29-270b86c67d04",
-        "detail": {
-            "approver": "rae.nakamura@streamline.example",
-            "decision": "approved",
-            "offer_type": "bill_credit"
-        },
-        "created_at": "2026-08-27T18:22:42.142585+00:00"
-    },
-    {
-        "event_id": "4250aa43-5000-4b3c-92db-e67e738e01f9",
+        "event_id": "9c2143b6-4426-4773-8bd5-23dd74ff0366",
         "event_kind": "trigger",
         "event_type": "assist_explain",
         "source": "app_user",
         "subscriber_id": "SUB-0002373",
         "action_id": null,
         "detail": {
-            "ts": "2026-08-27T18:40:45.328367+00:00",
+            "ts": "2026-08-27T19:16:14.639686+00:00",
             "type": "assist_explain",
             "model": "databricks-claude-sonnet-4-5",
             "request": {
                 "subscriber_id": "SUB-0002373",
                 "retrieval_query": "Subscriber SUB-0002373: plan=bundle, tenure=53mo, risk=0.911, band=critical, reason=service, open_tickets=1, outage=False, billing_dispute=True, CLV_at_risk=$2726.44.\n\nRetrieved service history (Lakeb"
             },
-            "response": "Subscriber SUB-0002373 is at critical churn risk (0.911) primarily due to an ongoing billing dispute combined with an open service ticket, despite no recent outage on their node. With 53 months of tenure and $2,726 in CLV at stake, this long-term bundle customer is experiencing service-related issues that have escalated to billing concerns\u2014a pattern that strongly correlates with imminent churn. The combination of unresolved service problems and financial disagreement creates a dual pain point that urgently requires intervention to prevent defection.",
+            "response": "Subscriber SUB-0002373 is at critical churn risk (0.911) primarily due to an active billing dispute combined with an open service ticket, creating a frustrating dual pain point. Despite being a long-tenured customer (53 months) with significant value at stake ($2,726 CLV), the unresolved billing issue is eroding their loyalty and trust. The pattern matches other at-risk subscribers on the same network node (NODE-OHIO-14) who are experiencing similar billing disputes and service concerns, suggesting a systemic issue that requires immediate resolution to prevent this valuable customer from churning.",
             "retrieved": [
                 {
                     "risk_band": "critical",
                     "bm25_score": -32.1034,
                     "home_metro": "Columbus",
                     "churn_reason": "service",
-                    "subscriber_id": "SUB-0004260",
-                    "service_summary": "mobile plan, 21 months tenure, node NODE-OHIO-14 . Recent outage on their node and a billing dispute; open ticket, elevated churn risk."
+                    "subscriber_id": "SUB-0003446",
+                    "service_summary": "mobile plan, 37 months tenure, node NODE-OHIO-14 . Recent outage on their node and a billing dispute; open ticket, elevated churn risk."
                 },
                 {
                     "risk_band": "critical",
                     "bm25_score": -32.1034,
                     "home_metro": "Columbus",
                     "churn_reason": "service",
-                    "subscriber_id": "SUB-0001448",
-                    "service_summary": "mobile plan, 18 months tenure, node NODE-OHIO-14 . Recent outage on their node and a billing dispute; open ticket, elevated churn risk."
+                    "subscriber_id": "SUB-0002595",
+                    "service_summary": "bundle plan, 82 months tenure, node NODE-OHIO-14 . Recent outage on their node and a billing dispute; open ticket, elevated churn risk."
                 },
                 {
                     "risk_band": "critical",
                     "bm25_score": -32.1034,
                     "home_metro": "Columbus",
                     "churn_reason": "service",
-                    "subscriber_id": "SUB-0006036",
-                    "service_summary": "bundle plan, 81 months tenure, node NODE-OHIO-14 . Recent outage on their node and a billing dispute; open ticket, elevated churn risk."
+                    "subscriber_id": "SUB-0002262",
+                    "service_summary": "mobile plan, 6 months tenure, node NODE-OHIO-14 . Recent outage on their node and a billing dispute; open ticket, elevated churn risk."
                 }
             ],
             "subscriber_id": "SUB-0002373"
         },
-        "created_at": "2026-08-27T18:40:45.477682+00:00"
+        "created_at": "2026-08-27T19:16:14.64137+00:00"
     },
     {
-        "event_id": "c52b8fba-5b87-42e7-a452-21d2c8b1ee5d",
+        "event_id": "abdc7bfc-c6c2-4f2e-95d6-1a226ca8823e",
         "event_kind": "trigger",
         "event_type": "assist_whatif",
         "source": "app_user",
         "subscriber_id": "SUB-0002373",
         "action_id": null,
         "detail": {
-            "ts": "2026-08-27T18:40:49.444570+00:00",
+            "ts": "2026-08-27T19:16:24.009966+00:00",
             "type": "assist_whatif",
             "model": "databricks-claude-sonnet-4-5",
             "request": {
-                "scenario": "What if we give a device upgrade instead of the bill credit? Is the net value better?",
+                "scenario": "What if we give a device upgrade instead of the bill credit?",
                 "subscriber_id": "SUB-0002373"
             },
-            "response": "No, the net value is **not better** with a device upgrade.\n\n**Device upgrade:** Predicted retained CLV = $406.86, net value = **$106.86**\n\n**Bill credit (recommended):** Predicted retained CLV = $1,364.53, net value = **$1,314.53**\n\nThe bill credit delivers $1,207.67 more in net value than the device upgrade. Stick with the recommended bill credit offer.",
+            "response": "If you give a **device upgrade** instead of the bill credit to SUB-0002373:\n\n- **Predicted Retained CLV**: $406.86\n- **Predicted Net Value**: $106.86\n\nThis would result in **$957.67 less retained CLV** and **$1,207.67 less net value** compared to the recommended bill credit offer. The device upgrade is significantly less effective for this service-related churn case.",
             "offer_ranking": [
                 {
                     "costUsd": 50.0,
@@ -230,86 +159,52 @@
             ],
             "subscriber_id": "SUB-0002373"
         },
-        "created_at": "2026-08-27T18:40:49.596327+00:00"
+        "created_at": "2026-08-27T19:16:24.01173+00:00"
     },
     {
-        "event_id": "7f95286b-aec2-421b-9d34-78243ceb8347",
+        "event_id": "0caab68d-cf2c-4680-bcbd-e7c7c56669b1",
         "event_kind": "trigger",
         "event_type": "assist_draft",
         "source": "app_user",
         "subscriber_id": "SUB-0002373",
         "action_id": null,
         "detail": {
-            "ts": "2026-08-27T18:41:00.056978+00:00",
+            "ts": "2026-08-27T19:16:41.181586+00:00",
             "type": "assist_draft",
             "model": "databricks-claude-sonnet-4-5",
             "request": {
                 "subscriber_id": "SUB-0002373"
             },
-            "response": "# Call Resolution Memo\n\n**Date:** [Current Date]  \n**Subscriber ID:** SUB-0002373  \n**Prepared for:** Care Lead Approval\n\n---\n\n## Situation Summary\n\n- **Account Type:** Bundle subscriber\n- **Tenure:** 53 months (4+ years)\n- **Location:** Columbus market\n- **Cancellation Reason:** Service issues\n- **Churn Risk Score:** 0.911 (Critical - immediate action required)\n\n## Analysis\n\nThis is a high-value, long-tenured customer experiencing service problems. With 53 months of loyalty and a churn risk exceeding 91%, we're at imminent risk of losing a established subscriber. The service-related complaint indicates a solvable issue rather than fundamental dissatisfaction with our offering.\n\n## Recommended Retention Offer\n\n**Offer Type:** One-Time Bill Credit - $50  \n**Rationale:** \n- Immediate goodwill gesture acknowledging service disruption\n- Low cost relative to customer lifetime value\n- Demonstrates accountability for service issues\n- Provides tangible compensation while technical resolution occurs\n\n**Predicted Retained CLV:** $1,364.53  \n**ROI:** 27:1 return on $50 investment\n\n## Next Steps\n\n1. **Immediate:** Authorize $50 bill credit application\n2. **Technical:** Escalate service issue to technical team for root cause resolution\n3. **Follow-up:** Schedule 7-day courtesy call to confirm service restoration\n4. **Documentation:** Log service issue details for quality improvement tracking\n\n**Approval Requested:** \u2610 Approved \u2610 Modified \u2610 Declined\n\n---\n*Time-sensitive: High churn risk requires same-day resolution*",
+            "response": "# Call Resolution Memo\n\n**Date:** [Current Date]  \n**Subscriber ID:** SUB-0002373  \n**Prepared for:** Care Lead Approval\n\n---\n\n## Situation Summary\n\n- **Account Type:** Bundle subscriber\n- **Tenure:** 53 months (4+ years)\n- **Location:** Columbus\n- **Cancellation Reason:** Service issues\n- **Churn Risk Score:** 0.911 (Critical - immediate intervention required)\n\n## Analysis\n\nThis is a high-value, long-tenured customer experiencing service problems with an extremely high likelihood of cancellation. At 53 months of loyalty, this subscriber represents significant relationship equity that warrants retention investment.\n\n## Recommended Offer\n\n**One-Time Bill Credit: $50**\n\n- **Predicted Retained CLV:** $1,364.53\n- **ROI:** 27:1 ($1,364.53 / $50)\n- **Rationale:** Bill credit directly addresses service frustration by providing immediate, tangible value while technical issues are resolved\n\n## Next Steps\n\n1. **Immediate:** Apply $50 bill credit to account\n2. Escalate service issues to technical team for priority resolution\n3. Schedule follow-up call in 7-14 days to confirm service improvement\n4. Document service issues for trend analysis\n\n**Approval Requested:** \u2610 Approved \u2610 Modified \u2610 Declined\n\n---\n\n*This retention offer is data-driven and falls within standard guidelines for high-risk, high-value subscribers.*",
             "subscriber_id": "SUB-0002373"
         },
-        "created_at": "2026-08-27T18:41:00.209668+00:00"
+        "created_at": "2026-08-27T19:16:41.183146+00:00"
     },
     {
-        "event_id": "db8b9261-c851-45db-ad94-4419b4499ff9",
-        "event_kind": "trigger",
-        "event_type": "assist_draft",
-        "source": "app_user",
-        "subscriber_id": "SUB-0002373",
-        "action_id": null,
-        "detail": {
-            "ts": "2026-08-27T18:41:09.817892+00:00",
-            "type": "assist_draft",
-            "model": "databricks-claude-sonnet-4-5",
-            "request": {
-                "subscriber_id": "SUB-0002373"
-            },
-            "response": "# Call Resolution Memo\n\n**Date:** [Current Date]  \n**Subscriber ID:** SUB-0002373  \n**Prepared for:** Care Lead Approval\n\n---\n\n## Situation Summary\n\n- **Account Type:** Bundle subscriber\n- **Tenure:** 53 months (4+ years)\n- **Location:** Columbus market\n- **Cancellation Reason:** Service issues\n- **Churn Risk Score:** 0.911 (Critical - immediate action required)\n\n## Analysis\n\nThis is a high-value, long-tenured customer experiencing service problems. With 53 months of loyalty and a churn risk exceeding 91%, we're at imminent risk of losing a established subscriber. The service-related complaint indicates a solvable issue rather than fundamental dissatisfaction with our offering.\n\n## Recommended Retention Offer\n\n**Offer Type:** One-Time Bill Credit - $50  \n**Rationale:** Immediate financial gesture acknowledging service disruption while we resolve technical issues\n\n**Expected Outcome:**\n- Predicted Retained CLV: **$1,364.53**\n- Investment: $50\n- ROI: 27:1\n\n## Next Steps\n\n1. **Immediate:** Authorize $50 bill credit\n2. Escalate service issue to technical team for priority resolution\n3. Schedule follow-up call in 7 days to confirm service restoration\n4. Document resolution for quality assurance\n\n**Recommendation:** APPROVE - High ROI retention opportunity for loyal customer with resolvable issue.\n\n---\n*Awaiting approval to proceed with offer*",
-            "subscriber_id": "SUB-0002373"
-        },
-        "created_at": "2026-08-27T18:41:09.969404+00:00"
-    },
-    {
-        "event_id": "58c4a27b-145b-4259-9813-4d45d27a18b5",
-        "event_kind": "trigger",
-        "event_type": "view_scored",
-        "source": "schedule",
-        "subscriber_id": "SUB-0003372",
-        "action_id": null,
-        "detail": {
-            "open_unactioned": 196,
-            "top_subscriber_id": "SUB-0003372",
-            "subscribers_scored": 200,
-            "total_clv_at_risk_usd": 353377.08
-        },
-        "created_at": "2026-08-27T18:41:22.69943+00:00"
-    },
-    {
-        "event_id": "6052d139-5eae-42db-b137-343357439f80",
+        "event_id": "bb26e715-2ea3-41ea-ae8e-3c614379b6d2",
         "event_kind": "decision",
         "event_type": "action_proposed",
         "source": "app_user",
         "subscriber_id": "SUB-0002373",
-        "action_id": "3ca4822e-6d20-412a-a05c-9eaaba9266a0",
+        "action_id": "5a1ef849-f933-4900-a25b-b5aa6ffcdff6",
         "detail": {
             "by": "rae.nakamura@streamline.example",
             "offer_type": "bill_credit"
         },
-        "created_at": "2026-08-27T18:41:37.560495+00:00"
+        "created_at": "2026-08-27T19:17:25.785553+00:00"
     },
     {
-        "event_id": "43d3544c-6b29-4823-8de2-6995069a6e8d",
+        "event_id": "e25ec595-7937-446c-9f07-186c10a05755",
         "event_kind": "decision",
         "event_type": "action_committed",
         "source": "app_user",
         "subscriber_id": "SUB-0002373",
-        "action_id": "3ca4822e-6d20-412a-a05c-9eaaba9266a0",
+        "action_id": "5a1ef849-f933-4900-a25b-b5aa6ffcdff6",
         "detail": {
             "approver": "rae.nakamura@streamline.example",
             "decision": "approved",
             "offer_type": "bill_credit"
         },
-        "created_at": "2026-08-27T18:41:38.297465+00:00"
+        "created_at": "2026-08-27T19:17:26.140814+00:00"
     }
 ]

@@ -37,8 +37,24 @@ Answers the hero question as a **decision** — surface, prescribe, approve, act
 - **Built on the dev branch** (`feature/build2-app`), keeping `main` clean to demo from.
 - Retrieval reuses the **Build-1 Lakebase Search** index, not a new vector store.
 
-## App
+## App (deployed + running)
 
-`app_m3/` — FastAPI app (`app.py` + `server/`), `app.yaml`, `pyproject.toml`/`uv.lock`. Created on
-Databricks Apps (`streamline-care-desk`, compute ACTIVE). All evidence here was produced by running
-the app against the live Lakebase Postgres + the `databricks-claude-sonnet-4-5` serving endpoint.
+`app_m3/` — FastAPI app (`app.py` + `server/`), `app.yaml`, `pyproject.toml`. **Deployed to
+Databricks Apps and RUNNING** at
+`https://streamline-care-desk-7405612117836809.9.azure.databricksapps.com`, reading the Build-1
+**dev-branch** Lakebase (synced mirrors + the Build-1 Lakebase Search BM25 indexes) and calling the
+`databricks-claude-sonnet-4-5` serving endpoint. All evidence here was produced by driving the
+**deployed** app's endpoints (`/api/view`, `/api/trigger`, `/api/assist/*`, `/api/act/*`).
+
+Auth is SDK-free (`server/auth.py`): OAuth M2M from the app's injected service-principal creds,
+Lakebase credential + model calls via REST — so the Apps build resolves from public PyPI, not the
+Databricks pypi-proxy.
+
+## Governance / requirements held
+
+- **Deployed on Databricks Apps**, reading the Build-1 synced UC tables (read-only).
+- **Never writes the synced tables** — writes only `care_actions`, `care_action_events`, `workflow_state`.
+- **Built on the dev branch** (git `feature/build2-app` off main; Lakebase branch `dev`), main kept clean.
+- **Assist retrieves from the Build-1 Lakebase Search BM25 index** (`lakebase_bm25` over `offer_search`
+  + `service_history_search`), not a separate vector store.
+- **Hero question answered as a decision** (surface → prescribe → approve → act), closed loop.

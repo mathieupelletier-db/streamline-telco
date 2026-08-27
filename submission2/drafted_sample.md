@@ -10,34 +10,31 @@
 
 - **Account Type:** Bundle subscriber
 - **Tenure:** 53 months (4+ years)
-- **Location:** Columbus market
+- **Location:** Columbus
 - **Cancellation Reason:** Service issues
-- **Churn Risk Score:** 0.911 (Critical - immediate action required)
+- **Churn Risk Score:** 0.911 (Critical - immediate intervention required)
 
 ## Analysis
 
-This is a high-value, long-tenured customer experiencing service problems. With 53 months of loyalty and a churn risk exceeding 91%, we're at imminent risk of losing a established subscriber. The service-related complaint indicates a solvable issue rather than fundamental dissatisfaction with our offering.
+This is a high-value, long-tenured customer experiencing service problems with an extremely high likelihood of cancellation. At 53 months of loyalty, this subscriber represents significant relationship equity that warrants retention investment.
 
-## Recommended Retention Offer
+## Recommended Offer
 
-**Offer Type:** One-Time Bill Credit - $50  
-**Rationale:** 
-- Immediate goodwill gesture acknowledging service disruption
-- Low cost relative to customer lifetime value
-- Demonstrates accountability for service issues
-- Provides tangible compensation while technical resolution occurs
+**One-Time Bill Credit: $50**
 
-**Predicted Retained CLV:** $1,364.53  
-**ROI:** 27:1 return on $50 investment
+- **Predicted Retained CLV:** $1,364.53
+- **ROI:** 27:1 ($1,364.53 / $50)
+- **Rationale:** Bill credit directly addresses service frustration by providing immediate, tangible value while technical issues are resolved
 
 ## Next Steps
 
-1. **Immediate:** Authorize $50 bill credit application
-2. **Technical:** Escalate service issue to technical team for root cause resolution
-3. **Follow-up:** Schedule 7-day courtesy call to confirm service restoration
-4. **Documentation:** Log service issue details for quality improvement tracking
+1. **Immediate:** Apply $50 bill credit to account
+2. Escalate service issues to technical team for priority resolution
+3. Schedule follow-up call in 7-14 days to confirm service improvement
+4. Document service issues for trend analysis
 
 **Approval Requested:** ☐ Approved ☐ Modified ☐ Declined
 
 ---
-*Time-sensitive: High churn risk requires same-day resolution*
+
+*This retention offer is data-driven and falls within standard guidelines for high-risk, high-value subscribers.*
