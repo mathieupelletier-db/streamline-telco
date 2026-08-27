@@ -1,0 +1,19 @@
+command:
+  - "python"
+  - "-m"
+  - "uvicorn"
+  - "app:app"
+  - "--host"
+  - "0.0.0.0"
+  - "--port"
+  - "8000"
+
+env:
+  # PGHOST / PGUSER / PGPORT / PGDATABASE are auto-injected when the Lakebase database
+  # resource is attached to the app in the UI. ENDPOINT_NAME must be set explicitly.
+  - name: ENDPOINT_NAME
+    value: "projects/streamline-telco/branches/production/endpoints/primary"
+  - name: SERVING_ENDPOINT
+    value: "databricks-claude-sonnet-4-5"
+  - name: APP_USER_EMAIL
+    value: "rae.nakamura@streamline.example"
