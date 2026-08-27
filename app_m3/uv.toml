@@ -1,4 +1,0 @@
-# Install from public PyPI, not the Databricks pypi-proxy (which times out intermittently).
-[[index]]
-url = "https://pypi.org/simple"
-default = true
