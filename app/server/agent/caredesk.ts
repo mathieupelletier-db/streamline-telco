@@ -36,6 +36,7 @@ import OpenAI from 'openai';
 import {
   Agent,
   setDefaultOpenAIClient,
+  setOpenAIAPI,
   setTracingDisabled,
 } from '@openai/agents';
 import type { Tool } from '@openai/agents';
@@ -44,6 +45,14 @@ import * as mlflow from 'mlflow-tracing';
 import { z } from 'zod';
 import { authHeaders } from '../lib/auth.js';
 import type { AppDb } from '../db/index.js';
+import {
+  getAtriskSubscriber,
+  worstAtriskSubscriber,
+  getSubscriberPosition,
+  getRecommendation,
+  searchHistory as searchHistoryQuery,
+  recordRetentionAction,
+} from '../db/queries/subscribers.js';
 // The data-backend helpers. Both are config-driven and share the same
 // DataCallResult shape + ToolProgressEvent stream, so the `ask_data` tool
 // below can delegate to EITHER without the UI caring which powers it. This
@@ -140,11 +149,39 @@ function makeTools(ctx: AgentContext): Tool[] {
         .nullable()
         .describe('Subscriber id, e.g. SUB-0000214. Null → return the worst at-risk subscriber.'),
     }),
-    execute: async () => {
-      throw new Error(
-        'Not implemented — this is your Build 2 Assist task; see APP_WORKSHOP.md',
-      );
-    },
+    execute: async ({ subscriber_id }) =>
+      mlflow.withSpan(
+        async () => {
+          const atrisk = subscriber_id
+            ? await getAtriskSubscriber(ctx.db, subscriber_id)
+            : await worstAtriskSubscriber(ctx.db);
+          if (!atrisk) return { found: false };
+          const pos = await getSubscriberPosition(ctx.db, atrisk.subscriberId);
+          return {
+            found: true,
+            subscriber_id: atrisk.subscriberId,
+            plan_type: pos?.planType ?? atrisk.planType,
+            tenure_months: pos?.tenureMonths ?? null,
+            monthly_arpu_usd: atrisk.monthlyArpuUsd,
+            churn_risk_score: atrisk.churnRiskScore,
+            churn_reason: atrisk.churnReason,
+            open_ticket_count: pos?.openTicketCount ?? null,
+            has_open_outage: atrisk.hasOpenOutage,
+            has_open_billing: atrisk.hasOpenBilling,
+            clv_at_risk_usd: atrisk.clvAtRiskUsd,
+            home_metro: pos?.homeMetro ?? null,
+            sub_lat: pos?.subLat ?? null,
+            sub_lng: pos?.subLng ?? null,
+            service_summary: pos?.serviceSummary ?? null,
+            candidate_offer_id: atrisk.candidateOfferId,
+          };
+        },
+        {
+          name: 'find_atrisk_subscriber',
+          spanType: mlflow.SpanType.TOOL,
+          inputs: { subscriber_id },
+        },
+      ),
   });
 
   // ── rank_offers — TRAINEE BUILDS (Build 2 · Assist). STUB. ───────────────
@@ -162,11 +199,24 @@ function makeTools(ctx: AgentContext): Tool[] {
         .string()
         .describe('Subscriber id, e.g. SUB-0000214'),
     }),
-    execute: async () => {
-      throw new Error(
-        'Not implemented — this is your Build 2 Assist task; see APP_WORKSHOP.md',
-      );
-    },
+    execute: async ({ subscriber_id }) =>
+      mlflow.withSpan(
+        async () => {
+          const rec = await getRecommendation(ctx.db, subscriber_id);
+          if (!rec) {
+            return {
+              scored: false,
+              note: 'No retention recommendation yet — build + score the churn_recommender model (Build 2 ML step), then reset the demo.',
+            };
+          }
+          return rec;
+        },
+        {
+          name: 'rank_offers',
+          spanType: mlflow.SpanType.TOOL,
+          inputs: { subscriber_id },
+        },
+      ),
   });
 
   // ── search_history — TRAINEE BUILDS (Build 2 · Assist). STUB. ─────────────
@@ -184,11 +234,18 @@ function makeTools(ctx: AgentContext): Tool[] {
         .string()
         .describe('Search query, e.g. "outage" or "billing dispute"'),
     }),
-    execute: async () => {
-      throw new Error(
-        'Not implemented — this is your Build 2 Assist task; see APP_WORKSHOP.md',
-      );
-    },
+    execute: async ({ subscriber_id, query }) =>
+      mlflow.withSpan(
+        async () => {
+          const hits = await searchHistoryQuery(ctx.db, subscriber_id, query);
+          return { subscriber_id, query, results: hits };
+        },
+        {
+          name: 'search_history',
+          spanType: mlflow.SpanType.TOOL,
+          inputs: { subscriber_id, query },
+        },
+      ),
   });
 
   // ── execute_retention_action — TRAINEE BUILDS (Build 3 · Act). STUB. ──────
@@ -218,11 +275,31 @@ function makeTools(ctx: AgentContext): Tool[] {
         .nullable()
         .describe('Predicted retained CLV from the model, if available'),
     }),
-    execute: async () => {
-      throw new Error(
-        'Not implemented — this is your Build 3 Act task; see APP_WORKSHOP.md',
-      );
-    },
+    execute: async ({ subscriber_id, offer_type, offer_id, drafted_summary, predicted_retained_clv_usd }) =>
+      mlflow.withSpan(
+        async () => {
+          const { actionId } = await recordRetentionAction(ctx.db, {
+            subscriberId: subscriber_id,
+            offerType: offer_type,
+            offerId: offer_id,
+            draftedSummary: drafted_summary,
+            predictedRetainedClvUsd: predicted_retained_clv_usd,
+            userEmail: ctx.userEmail,
+          });
+          return {
+            recorded: true,
+            action_id: actionId,
+            subscriber_id,
+            offer_type,
+            predicted_retained_clv_usd,
+          };
+        },
+        {
+          name: 'execute_retention_action',
+          spanType: mlflow.SpanType.TOOL,
+          inputs: { subscriber_id, offer_type },
+        },
+      ),
   });
 
   // find_atrisk_subscriber / rank_offers / search_history / execute_retention_action
@@ -342,9 +419,13 @@ export async function configureAgentsSdk(ctx: AgentContext): Promise<void> {
     },
   });
   setDefaultOpenAIClient(client);
-  // Responses API (the SDK's default — we leave setOpenAIAPI alone).
-  // Keep `agentModel` on `databricks-gpt-5-4` or a newer Responses-capable
-  // GPT (needs `openai/v1/responses`). Claude/non-Responses models 400.
+  // Use the Chat Completions API, not Responses. Databricks foundation-model
+  // endpoints in this workspace expose `llm/v1/chat` (not `openai/v1/responses`),
+  // so the Responses passthrough 400s ("Responses API passthrough is not
+  // supported for model …"). The Agents SDK drives the same tool loop over
+  // chat/completions when we flip this. Works with the Claude `llm/v1/chat`
+  // endpoints (e.g. databricks-claude-sonnet-4-5).
+  setOpenAIAPI('chat_completions');
   setTracingDisabled(true); // disable OpenAI's tracing backend; we use MLflow
 }
 

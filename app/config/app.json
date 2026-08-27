@@ -22,12 +22,12 @@
   //   makeTools. For both: register both with distinct names + tell the model
   //   in instructions when to prefer each.
   "masEndpointName": "${MAS_ENDPOINT_NAME:}",
-  "genieSpaceId":    "${GENIE_SPACE_ID:}",
+  "genieSpaceId":    "${GENIE_SPACE_ID:01f1a22b61531adeb4bfa89a5193ef65}",
 
   // Agent LLM. Needs the Responses API (openai/v1/responses). databricks-gpt-5-4
   // is the baseline; a newer GPT endpoint with /responses enabled works too.
   // Non-Responses models (Claude etc.) 400 BAD_REQUEST.
-  "agentModel": "databricks-gpt-5-4",
+  "agentModel": "${AGENT_MODEL:databricks-claude-sonnet-4-5}",
 
   // MLflow trace path. Empty → chat shows "Trace pending…". Auto-created
   // at boot via lib/mlflow.ts.

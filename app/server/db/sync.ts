@@ -150,9 +150,11 @@ export async function syncFromDelta(
           scored_at: string | null;
         }>(
           warehouseId,
+          // offer_ranking is already a JSON string in gold (built via TO_JSON in the
+          // pipeline), so select it as-is; wrapping a string in to_json() errors.
           `SELECT subscriber_id, recommended_offer,
                   predicted_retained_clv_usd, predicted_net_value_usd,
-                  to_json(offer_ranking) AS offer_ranking, scored_at
+                  CAST(offer_ranking AS STRING) AS offer_ranking, scored_at
            FROM ${fq('retentionRecommendations')}`,
         ).catch((e) => {
           // The trainee builds this table in the ML step — until then it
