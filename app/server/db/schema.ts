@@ -249,11 +249,25 @@ export const offers = appSchema.table(
 // standalone timeline for the drawer Activity tab.
 // ============================================================================
 
+// `care_agents` — the care leads / SVPs who review + approve retention offers.
+// Parent of `care_actions` (each action is owned by an agent). Small, app-managed.
+export const careAgents = appSchema.table('care_agents', {
+  agentId: text('agent_id').primaryKey(),
+  email: text('email').notNull().unique(),
+  displayName: text('display_name').notNull(),
+  team: text('team').notNull().default('Customer Care & Retention'),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const careActions = appSchema.table(
   'care_actions',
   {
     id: uuid('id').primaryKey().defaultRandom(),
     subscriberId: text('subscriber_id').notNull(),
+    // Owning care agent — FK into care_agents (the operational domain relationship).
+    agentId: text('agent_id').references(() => careAgents.agentId),
     offerType: text('offer_type', {
       enum: ['bill_credit', 'plan_upgrade_discount', 'device_upgrade'],
     }).notNull(),
@@ -270,6 +284,8 @@ export const careActions = appSchema.table(
     approvedBy: text('approved_by'),
     // Append-only audit trail. Each entry: { at, by, action, notes?, tool? }
     auditTrail: jsonb('audit_trail').$type<AuditEntry[]>().notNull().default([]),
+    // ISO year-week the action was decided (for weekly save-rate reporting).
+    decidedWeek: text('decided_week'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -278,7 +294,29 @@ export const careActions = appSchema.table(
   (t) => [
     index('care_actions_subscriber_idx').on(t.subscriberId),
     index('care_actions_created_idx').on(t.createdAt),
+    index('care_actions_agent_idx').on(t.agentId),
   ],
+);
+
+// `care_action_events` — append-only lifecycle history for a care action, normalized out of
+// the JSONB audit_trail into a first-class child table. FK → care_actions (ON DELETE CASCADE).
+export const careActionEvents = appSchema.table(
+  'care_action_events',
+  {
+    eventId: uuid('event_id').primaryKey().defaultRandom(),
+    actionId: uuid('action_id')
+      .notNull()
+      .references(() => careActions.id, { onDelete: 'cascade' }),
+    eventType: text('event_type', {
+      enum: ['proposed', 'approved', 'executed', 'declined', 'note'],
+    }).notNull(),
+    actorEmail: text('actor_email'),
+    notes: text('notes'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index('care_action_events_action_idx').on(t.actionId)],
 );
 
 // ============================================================================
