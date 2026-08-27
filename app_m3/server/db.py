@@ -6,7 +6,7 @@ from datetime import datetime, date
 from uuid import UUID
 import psycopg
 from psycopg_pool import ConnectionPool
-from databricks.sdk import WorkspaceClient
+from . import auth
 
 
 def to_jsonable(obj):
@@ -27,10 +27,6 @@ def to_jsonable(obj):
 def jdumps(obj) -> str:
     return json.dumps(to_jsonable(obj))
 
-_w = WorkspaceClient() if os.environ.get("DATABRICKS_APP_NAME") else WorkspaceClient(
-    profile=os.environ.get("DATABRICKS_PROFILE", "DEFAULT")
-)
-
 ENDPOINT_NAME = os.environ.get(
     "ENDPOINT_NAME", "projects/streamline-telco/branches/production/endpoints/primary"
 )
@@ -41,8 +37,7 @@ class OAuthConnection(psycopg.Connection):
 
     @classmethod
     def connect(cls, conninfo="", **kwargs):
-        cred = _w.postgres.generate_database_credential(endpoint=ENDPOINT_NAME)
-        kwargs["password"] = cred.token
+        kwargs["password"] = auth.lakebase_credential(ENDPOINT_NAME)
         return super().connect(conninfo, **kwargs)
 
 

@@ -24,7 +24,9 @@ APP_USER = os.environ.get("APP_USER_EMAIL", "rae.nakamura@streamline.example")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    pool.open(wait=True, timeout=30.0)
+    # Non-blocking open so a transient credential hiccup doesn't fail app startup;
+    # the pool retries connections in the background and per-request.
+    pool.open(wait=False)
     yield
     pool.close()
 
