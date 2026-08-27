@@ -1,5 +1,6 @@
-* 156559b (HEAD -> main) Add PR-merge + offer-FK evidence to submission
-*   8574348 (origin/main, origin/HEAD) Merge pull request #1 from mathieupelletier-db/feature/care-action-offer-fk
+* 22de309 (HEAD -> main) Configure Lakebase scale-to-zero (idle branches cost ~nothing)
+* 0668cbe (origin/main, origin/HEAD) Add PR-merge + offer-FK evidence to submission
+*   8574348 Merge pull request #1 from mathieupelletier-db/feature/care-action-offer-fk
 |\  
 | * c598099 (origin/feature/care-action-offer-fk, feature/care-action-offer-fk) Relate care_actions to the offer catalog with a foreign key
 |/  

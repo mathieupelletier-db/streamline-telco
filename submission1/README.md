@@ -11,6 +11,7 @@ UC catalog **`streamline_lakebase`**, source data in **`ai_demo_gen.streamline_t
 | 4 | Dev branch off main + the changes made on it | `branch.txt` |
 | 5 | Coding-agent's schema/data change (diff/migration, authorship, validation, promotion) | `agent_change/` |
 | 5b | Operational schema modeled for the domain (related tables + PK/FK), promoted via a committed merge AND a merged GitHub PR into main | `agent_change/operational_schema.md`, `agent_change/002_operational_schema.sql`, `agent_change/003_care_action_offer_fk.sql`, `agent_change/operational_schema_result.json`, `agent_change/promotion_merge.txt`, `agent_change/pr_merge.txt` |
+| 5c | Scale-to-zero configured so idle branches cost ~nothing | `scale_to_zero.json` (live evidence), build construct: `app/scripts/lakebase_scale_to_zero.sh` |
 | 6 | Lakebase Search query + relevant records for a natural-language query | `search_query.txt`, `search_result.json` |
 | 7 | Representative business question + query + correct result | `core_question.txt`, `core_query.sql`, `core_query_result.json` |
 | 8 | Git history (`git log --graph --oneline --decorate --all`) with branch off main + promotion merge | `git_history.txt` |

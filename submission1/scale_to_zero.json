@@ -1,0 +1,22 @@
+{
+  "scale_to_zero": "enabled",
+  "note": "Autoscaling endpoints suspend compute after suspend_timeout_duration of inactivity (scale to zero); min_cu 0.5 floor; wake on next connection. Idle branches pay storage only.",
+  "endpoints": [
+    {
+      "branch": "production",
+      "endpoint": "primary",
+      "autoscaling_limit_min_cu": 0.5,
+      "autoscaling_limit_max_cu": 2,
+      "suspend_timeout_duration": "300s",
+      "current_state": "ACTIVE"
+    },
+    {
+      "branch": "dev",
+      "endpoint": "primary",
+      "autoscaling_limit_min_cu": 0.5,
+      "autoscaling_limit_max_cu": 2,
+      "suspend_timeout_duration": "300s",
+      "current_state": "ACTIVE"
+    }
+  ]
+}
