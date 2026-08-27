@@ -261,6 +261,17 @@ export const careAgents = appSchema.table('care_agents', {
     .defaultNow(),
 });
 
+// `care_offer_catalog` — app-owned reference copy of the retention offer catalog. The synced
+// `offers` mirror is read-only (sync-pipeline owned), so care_actions.offer_id references this
+// table to make "which offer was applied" a referentially-enforced relationship.
+export const careOfferCatalog = appSchema.table('care_offer_catalog', {
+  offerId: text('offer_id').primaryKey(),
+  offerName: text('offer_name').notNull(),
+  offerType: text('offer_type').notNull(),
+  valueUsd: doublePrecision('value_usd'),
+  description: text('description'),
+});
+
 export const careActions = appSchema.table(
   'care_actions',
   {
@@ -271,7 +282,8 @@ export const careActions = appSchema.table(
     offerType: text('offer_type', {
       enum: ['bill_credit', 'plan_upgrade_discount', 'device_upgrade'],
     }).notNull(),
-    offerId: text('offer_id'),
+    // Applied offer — FK into the offer catalog (referentially-enforced link).
+    offerId: text('offer_id').references(() => careOfferCatalog.offerId),
     // The retention offer summary the agent drafted.
     draftedSummary: text('drafted_summary'),
     predictedRetainedClvUsd: doublePrecision('predicted_retained_clv_usd'),
