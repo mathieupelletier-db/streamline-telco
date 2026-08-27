@@ -1,4 +1,9 @@
-* aeb3f82 (HEAD -> main) Use native Lakebase Search (BM25) for search evidence
+* b5824bd (HEAD -> main) Add operational-schema submission evidence + promotion-merge record
+*   fb0c9d4 Merge feature/operational-schema: promote relational operational schema to main
+|\  
+| * 9650d5a (feature/operational-schema) Model operational schema for the domain (related tables + FKs)
+|/  
+* 0fc5975 Use native Lakebase Search (BM25) for search evidence
 * 66b23fd Build 1 submission — Lakebase evidence bundle (submission1/)
 *   af70aaf Merge dev-lakebase-care-analytics: promote care_action_analytics to production
 |\  

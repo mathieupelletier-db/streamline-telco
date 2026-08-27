@@ -1,0 +1,19 @@
+commit fb0c9d43412ef5455ca36eafe0163abfdf5dcf91
+Merge: 0fc5975 9650d5a
+Author: Mathieu Pelletier <mathieu.pelletier@databricks.com>
+Date:   Thu Aug 27 13:00:16 2026 -0400
+
+    Merge feature/operational-schema: promote relational operational schema to main
+    
+    Promotes the validated operational-schema change (care_agents ──< care_actions ──<
+    care_action_events, with foreign keys) from the feature branch into main after
+    validation on the Lakebase dev branch and promotion to the Lakebase production branch.
+    
+    Build construct: migrations/002_operational_schema.sql + app/server/db/schema.ts.
+    Execution evidence: submission1/agent_change/operational_schema_result.json.
+    
+    Co-authored-by: Isaac <no-reply@databricks.com>
+
+ app/server/db/schema.ts               | 38 ++++++++++++++++
+ migrations/002_operational_schema.sql | 84 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 122 insertions(+)
