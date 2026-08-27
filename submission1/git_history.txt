@@ -1,5 +1,6 @@
-* 7f0f99d (HEAD -> main) Add branch-workflow evidence to submission
-*   3612d98 (origin/main, origin/HEAD) Merge pull request #2 from mathieupelletier-db/feature/branch-workflow
+* f06f48a (HEAD -> main) Add execution evidence for the writable operational tables
+* 5bc545c (origin/main, origin/HEAD) Add branch-workflow evidence to submission
+*   3612d98 Merge pull request #2 from mathieupelletier-db/feature/branch-workflow
 |\  
 | * 2c7df20 (origin/feature/branch-workflow, feature/branch-workflow) Capture the Lakebase branch->validate->promote workflow in code
 |/  

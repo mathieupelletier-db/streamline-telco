@@ -1,0 +1,33 @@
+### Ownership distinction (writable app tables vs read-only synced mirrors)
+         relation          |              owner               |        role        
+---------------------------+----------------------------------+--------------------
+ offers                    | databricks_writer_16405          | READ-ONLY synced
+ open_atrisk               | databricks_writer_16405          | READ-ONLY synced
+ retention_recommendations | databricks_writer_16405          | READ-ONLY synced
+ subscriber_position       | databricks_writer_16405          | READ-ONLY synced
+ care_action_events        | mathieu.pelletier@databricks.com | WRITABLE app-owned
+ care_actions              | mathieu.pelletier@databricks.com | WRITABLE app-owned
+ care_agents               | mathieu.pelletier@databricks.com | WRITABLE app-owned
+(7 rows)
+
+### INSERT into care_actions (writable) + child event, then read back
+ id | subscriber_id | offer_type | status 
+----+---------------+------------+--------
+(0 rows)
+
+INSERT 0 0
+                  id                  |  status  |          decided_at           
+--------------------------------------+----------+-------------------------------
+ b7e18b12-f39d-48c8-b511-3c77bb3d2550 | executed | 2026-08-27 17:19:41.461966+00
+(1 row)
+
+UPDATE 1
+### Read back (agent -> action -> events join)
+ subscriber_id |       agent       | offer_type  |  status  | events 
+---------------+-------------------+-------------+----------+--------
+ SUB-0000214   | Mathieu Pelletier | bill_credit | executed |      1
+ SUB-0000301   | Mathieu Pelletier | bill_credit | executed |      1
+ SUB-0000412   | Mathieu Pelletier | bill_credit | approved |      1
+ SUB-0007220   | Mathieu Pelletier | bill_credit | executed |      1
+(4 rows)
+

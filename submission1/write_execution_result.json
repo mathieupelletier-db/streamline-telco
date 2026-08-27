@@ -1,0 +1,75 @@
+{
+    "captured_at": "2026-08-27T17:19:13.093447+00:00",
+    "writable_tables": [
+        {
+            "table": "care_action_events",
+            "owner": "mathieu.pelletier@databricks.com"
+        },
+        {
+            "table": "care_actions",
+            "owner": "mathieu.pelletier@databricks.com"
+        },
+        {
+            "table": "care_agents",
+            "owner": "mathieu.pelletier@databricks.com"
+        }
+    ],
+    "synced_readonly_tables": [
+        {
+            "table": "offers",
+            "owner": "databricks_writer_16405"
+        },
+        {
+            "table": "open_atrisk",
+            "owner": "databricks_writer_16405"
+        },
+        {
+            "table": "retention_recommendations",
+            "owner": "databricks_writer_16405"
+        },
+        {
+            "table": "subscriber_position",
+            "owner": "databricks_writer_16405"
+        }
+    ],
+    "row_counts": {
+        "care_actions": 4,
+        "care_action_events": 4,
+        "care_agents": 1,
+        "subscriber_position_synced": 40000
+    },
+    "care_actions_rows": [
+        {
+            "subscriber_id": "SUB-0000214",
+            "agent_id": "AGT-BD3A27",
+            "offer_type": "bill_credit",
+            "status": "executed",
+            "decided_week": "2026-W35",
+            "predicted_retained_clv_usd": 1357.19
+        },
+        {
+            "subscriber_id": "SUB-0000301",
+            "agent_id": "AGT-BD3A27",
+            "offer_type": "bill_credit",
+            "status": "executed",
+            "decided_week": "2026-W35",
+            "predicted_retained_clv_usd": 1364.53
+        },
+        {
+            "subscriber_id": "SUB-0000412",
+            "agent_id": "AGT-BD3A27",
+            "offer_type": "bill_credit",
+            "status": "approved",
+            "decided_week": "2026-W35",
+            "predicted_retained_clv_usd": 1312.44
+        },
+        {
+            "subscriber_id": "SUB-0007220",
+            "agent_id": "AGT-BD3A27",
+            "offer_type": "bill_credit",
+            "status": "executed",
+            "decided_week": "2026-W35",
+            "predicted_retained_clv_usd": 1301.55
+        }
+    ]
+}
