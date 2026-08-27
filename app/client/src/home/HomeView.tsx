@@ -21,15 +21,16 @@ import {
   Brain,
   CheckCircle2,
   Eye,
-  Mail,
   MessageCircleQuestion,
   Sparkles,
   Wrench,
+  XCircle,
   Zap,
 } from 'lucide-react';
 import { useSession, type ScriptStep } from '@/lib/api';
-import { fetchActivity } from '@/lib/returns';
-import type { ActivityEvent } from '@/shared/types';
+import { fetchCareActivity } from '@/lib/caredesk';
+import { OFFER_LABELS } from '@/shared/badges';
+import type { CareActivity } from '@/shared/types';
 import { dataMutated } from '@/lib/events';
 import { dockController } from '@/chat/dockController';
 import { AgentLoopFlow } from '@/architecture/AgentLoopFlow';
@@ -42,38 +43,38 @@ import { AgentLoopFlow } from '@/architecture/AgentLoopFlow';
 // ---------------------------------------------------------------------------
 
 const HERO = {
-  name: 'Claire Dubois',
-  role: 'VP of Operations',
+  name: 'Dana Okafor',
+  role: 'VP of Customer Care & Retention',
 };
 
 const STORY = {
-  headline: "Returns are running 3x normal — and we don't know why.",
+  headline: 'A network outage just pushed a cluster of subscribers to the edge of churn.',
   situation:
-    "Three weeks ago returns jumped from ~$60K/week to $180K, driven by three skincare SKUs with a 30% return rate. They're still elevated at ~$80K. Revenue looks fine, orders look fine — but the refunds line is eating the quarter.",
-  goal: 'Find the root cause, confirm the blast radius, and decide on a recall or field fix.',
+    "A service disruption in the Columbus and Cleveland metros collided with existing billing friction — and 200 high-value subscribers spiked into critical churn risk faster than the nightly report could surface. Each one is a real contract and a real lifetime value walking out the door.",
+  goal: 'Find who is most at risk, pick the retention offer that actually pays back, and save them on the call.',
 };
 
 const STARTER_QUESTIONS = [
-  'Why do I have so many returns?',
-  'Was there an incident for that lot?',
-  'Which of the affected customers are premium (CS-tagged or model-found)?',
+  'Which subscribers are most at risk of churning right now?',
+  'Why is SUB-0000214 at risk, and what should I offer?',
+  'Rank the retention offers for the highest-value at-risk subscribers.',
 ];
 
 // The featured action's copy is inlined in the JSX below — the section is just
 // HTML, edit it freely. The prompt text is the single thing the agent runs.
 const FEATURED_ACTION_PROMPT =
-  "Something is off with our returns right now. Find the worst production lot, then use the premium classifier to split the affected customers — CS-tagged premium PLUS the hidden premiums the model surfaces — from the standard cohort. Draft two apology email templates: a 20% personal apology for premium, a 5% goodwill for standard. Show me both, including the count of CS-tagged vs model-found premiums, before sending. Wait for my approval. Once I say go, email everyone with their tier's coupon and approve all the refunds.";
+  'Something is off with churn right now. Find the highest-CLV at-risk subscriber, explain why they are at risk from their service history, then rank the retention offers using the model and recommend the one with the best predicted net value. Show me the ranked offers and the reasoning before doing anything. Wait for my approval. Once I say go, apply the recommended offer to the care desk.';
 
 export function HomeView() {
   const { config, configError, retry: retrySession } = useSession();
-  const [activity, setActivity] = useState<ActivityEvent[]>([]);
+  const [activity, setActivity] = useState<CareActivity[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     // Activity feed errors are non-fatal (feed silently empty). Logged for
     // dev debugging; the page still renders the story without it.
     const reload = () =>
-      fetchActivity(20).then(setActivity).catch((e) => {
+      fetchCareActivity(20).then(setActivity).catch((e) => {
         console.error('[home] activity feed failed', e);
       });
     void reload();
@@ -183,20 +184,19 @@ export function HomeView() {
                 Let the assistant handle it
               </div>
               <h3 className="display text-2xl font-semibold mb-2 leading-tight">
-                Handle the bad-lot returns — tier the offer by premium status
+                Save the highest-value at-risk subscriber — with the offer that pays back
               </h3>
               <p className="hidden sm:block text-sm opacity-85 leading-relaxed mb-5 max-w-2xl">
-                The assistant traces the spike to one lot, then asks the
-                premium classifier which of the affected customers your CS
-                team has tagged AND which hidden premiums the model has
-                surfaced (untagged customers who look just like the tagged
-                ones). It drafts two apology emails (20% personal apology
-                for premium, 5% goodwill for the rest), and waits for your
-                approval before anything goes out.
+                The assistant finds the highest-CLV subscriber the churn model
+                flagged, explains why they're at risk from their real service
+                history, then ranks the three retention offers (bill credit,
+                plan discount, device upgrade) by predicted net value and
+                recommends the best one. It shows you the ranked offers and the
+                reasoning, and waits for your approval before applying anything.
               </p>
               <p className="sm:hidden text-sm opacity-85 leading-relaxed mb-5">
-                Trace the spike, tier the offer (premium vs. rest), draft
-                the apology emails — approve before anything goes out.
+                Find the top at-risk subscriber, rank the retention offers by
+                payback, recommend the best — approve before it's applied.
               </p>
               <button
                 onClick={() => dockController.newAndSend(FEATURED_ACTION_PROMPT)}
@@ -216,7 +216,7 @@ export function HomeView() {
             </div>
             <ActivityFeed
               events={activity}
-              onJumpToReturn={(id) => navigate(`/operations?return=${id}`)}
+              onJumpToSubscriber={(id) => navigate(`/operations?search=${id}`)}
             />
           </section>
         )}
@@ -252,14 +252,14 @@ function JourneyDiagram({
     {
       icon: <Eye className="size-5" />,
       role: `${heroName} operates`,
-      quote: '"Returns are everywhere — my dashboard lit up."',
+      quote: '"The care desk lit up — a cluster of subscribers just went critical."',
       highlight: false,
       onClick: () => navigate('/operations'),
     },
     {
       icon: <MessageCircleQuestion className="size-5" />,
       role: 'She asks',
-      quote: '"Why do I have so many returns?"',
+      quote: '"Which subscribers are most at risk of churning?"',
       highlight: false,
       onClick: () =>
         step0
@@ -269,14 +269,14 @@ function JourneyDiagram({
     {
       icon: <Brain className="size-5" />,
       role: 'AI investigates',
-      quote: '"A bad production batch at one facility. 3 SKUs. Quality issue on the line."',
+      quote: '"An outage plus billing friction. The model ranks a bill credit as the best payback."',
       highlight: true,
       onClick: () => dockController.open(),
     },
     {
       icon: <Wrench className="size-5" />,
       role: 'AI takes action',
-      quote: '"Found the hidden premiums. Drafted both emails. Sent."',
+      quote: '"Recommended offer applied. Subscriber saved — logged to the care desk."',
       highlight: true,
       onClick: () => {
         // Fire step-1 (accept + draft). If user is mid-chain the dock will
@@ -405,21 +405,18 @@ function StepText({ step, compact = false }: { step: JourneyStep; compact?: bool
 
 function ActivityFeed({
   events,
-  onJumpToReturn,
+  onJumpToSubscriber,
 }: {
-  events: ActivityEvent[];
-  onJumpToReturn: (returnId: string) => void;
+  events: CareActivity[];
+  onJumpToSubscriber: (subscriberId: string) => void;
 }) {
   return (
     <ul className="rounded-xl border border-border bg-card divide-y divide-border overflow-hidden">
-      {events.map((e, i) => (
-        <li
-          key={i}
-          className="px-4 py-3 flex items-start gap-3 text-sm"
-        >
-          <ActivityIcon kind={e.kind} />
+      {events.map((e) => (
+        <li key={e.action_id} className="px-4 py-3 flex items-start gap-3 text-sm">
+          <ActivityIcon status={e.status} />
           <div className="flex-1 min-w-0">
-            <ActivityBody event={e} onJumpToReturn={onJumpToReturn} />
+            <ActivityBody event={e} onJumpToSubscriber={onJumpToSubscriber} />
           </div>
           <div className="text-xs text-muted-foreground shrink-0">
             {relativeTime(e.at)}
@@ -430,16 +427,14 @@ function ActivityFeed({
   );
 }
 
-function ActivityIcon({ kind }: { kind: ActivityEvent['kind'] }) {
-  const Icon = kind === 'email' ? Mail : CheckCircle2;
+function ActivityIcon({ status }: { status: CareActivity['status'] }) {
+  const Icon = status === 'declined' ? XCircle : CheckCircle2;
   const bg =
-    kind === 'email'
-      ? 'bg-[var(--info-subtle)] text-[var(--info-subtle-foreground)]'
+    status === 'declined'
+      ? 'bg-muted text-muted-foreground'
       : 'bg-[var(--success-subtle)] text-[var(--success-subtle-foreground)]';
   return (
-    <div
-      className={`size-7 rounded-full flex items-center justify-center shrink-0 ${bg}`}
-    >
+    <div className={`size-7 rounded-full flex items-center justify-center shrink-0 ${bg}`}>
       <Icon className="size-3.5" />
     </div>
   );
@@ -447,42 +442,28 @@ function ActivityIcon({ kind }: { kind: ActivityEvent['kind'] }) {
 
 function ActivityBody({
   event,
-  onJumpToReturn,
+  onJumpToSubscriber,
 }: {
-  event: ActivityEvent;
-  onJumpToReturn: (returnId: string) => void;
+  event: CareActivity;
+  onJumpToSubscriber: (subscriberId: string) => void;
 }) {
-  if (event.kind === 'email') {
-    return (
-      <>
-        <div className="text-foreground truncate">
-          <span className="font-medium">Email</span> to{' '}
-          <span className="text-muted-foreground">{event.to ?? '—'}</span>:{' '}
-          <span className="text-muted-foreground">"{event.subject}"</span>
-        </div>
-        <button
-          onClick={() => onJumpToReturn(event.return_id)}
-          className="mt-0.5 text-xs text-muted-foreground hover:text-foreground"
-        >
-          View return →
-        </button>
-      </>
-    );
-  }
   return (
     <>
-      <div className="text-foreground">
-        <span className="font-medium capitalize">{event.action}</span>
-        {event.notes && (
-          <span className="text-muted-foreground"> · {event.notes}</span>
+      <div className="text-foreground truncate">
+        <span className="font-medium capitalize">{event.status}</span>{' '}
+        <span className="text-muted-foreground">{OFFER_LABELS[event.offer_type]}</span> for{' '}
+        <span className="font-mono text-muted-foreground">{event.subscriber_id}</span>
+        {event.predicted_retained_clv_usd !== null && (
+          <span className="text-muted-foreground">
+            {' '}· ${Math.round(event.predicted_retained_clv_usd).toLocaleString()} retained CLV
+          </span>
         )}
-        <span className="text-xs text-muted-foreground ml-2">by {event.by}</span>
       </div>
       <button
-        onClick={() => onJumpToReturn(event.return_id)}
+        onClick={() => onJumpToSubscriber(event.subscriber_id)}
         className="mt-0.5 text-xs text-muted-foreground hover:text-foreground"
       >
-        View return →
+        {event.approved_by ? `by ${event.approved_by} · ` : ''}View subscriber →
       </button>
     </>
   );

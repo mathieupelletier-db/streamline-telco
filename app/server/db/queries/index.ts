@@ -4,3 +4,4 @@
  */
 export * from './chat.js';
 export * from './subscribers.js';
+export * from './caredesk.js';

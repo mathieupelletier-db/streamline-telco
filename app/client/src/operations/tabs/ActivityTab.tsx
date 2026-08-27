@@ -1,93 +1,72 @@
 /**
- * Merged timeline of what's happened on this return.
- * Combines:
- *   - emails[]         (outgoing apologies, any incoming replies)
- *   - ai_audit_trail[] (approved/rejected/escalated/email_sent/note)
- *
- * Sorted newest-first by `at`. This is the replacement for the old
- * Emails + Coupons + Decision-history tabs combined.
+ * Timeline of care actions taken on this subscriber. Each care action expands
+ * to show its lifecycle events (proposed → approved → executed / declined) from
+ * app.care_action_events, plus the drafted retention summary.
  */
 import { useMemo, useState } from 'react';
 import {
-  ArrowDownLeft,
-  ArrowUpRight,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
-  MessageSquare,
   StickyNote,
   XCircle,
-  AlertTriangle,
+  Sparkles,
 } from 'lucide-react';
-import type { AuditEntry, EmailEntry, ReturnDetail } from '@/shared/types';
+import { OFFER_LABELS } from '@/shared/badges';
+import type { CareActionTimelineEntry, SubscriberAction, SubscriberDetail } from '@/shared/types';
 
-type TimelineItem =
-  | ({ kind: 'email' } & EmailEntry)
-  | ({ kind: 'audit' } & AuditEntry);
+export function ActivityTab({ detail }: { detail: SubscriberDetail }) {
+  const actions = useMemo(
+    () =>
+      [...detail.actions].sort((a, b) =>
+        (b.created_at ?? '').localeCompare(a.created_at ?? ''),
+      ),
+    [detail.actions],
+  );
 
-export function ActivityTab({ detail }: { detail: ReturnDetail }) {
-  const items: TimelineItem[] = useMemo(() => {
-    const emails = (detail.emails ?? []).map((e) => ({
-      kind: 'email' as const,
-      ...e,
-    }));
-    const audits = (detail.ai_audit_trail ?? []).map((a) => ({
-      kind: 'audit' as const,
-      ...a,
-    }));
-    return [...emails, ...audits].sort((a, b) =>
-      (b.at ?? '').localeCompare(a.at ?? ''),
-    );
-  }, [detail]);
-
-  if (items.length === 0) {
+  if (actions.length === 0) {
     return (
       <div className="text-sm text-muted-foreground max-w-md">
-        Nothing's happened on this return yet. Once the assistant (or an
-        operator) emails the customer, approves, or adds a note, it will
-        show up here.
+        No retention actions on this subscriber yet. Once the assistant (or a care
+        lead) approves an offer, it will show up here with its full lifecycle.
       </div>
     );
   }
 
   return (
     <ol className="space-y-3 max-w-3xl">
-      {items.map((item, i) => (
-        <li key={i}>
-          {item.kind === 'email' ? (
-            <EmailRow email={item} />
-          ) : (
-            <AuditRow audit={item} />
-          )}
+      {actions.map((a) => (
+        <li key={a.action_id}>
+          <ActionRow action={a} />
         </li>
       ))}
     </ol>
   );
 }
 
-function EmailRow({ email }: { email: EmailEntry }) {
+function ActionRow({ action }: { action: SubscriberAction }) {
   const [expanded, setExpanded] = useState(false);
-  const isIncoming = email.direction === 'incoming';
-  const Arrow = isIncoming ? ArrowDownLeft : ArrowUpRight;
+  const { icon, tone, label } = describe(action.status);
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
       <button
         onClick={() => setExpanded((v) => !v)}
         className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-muted/40 transition-colors"
       >
-        <div className="size-7 rounded-full bg-[var(--info-subtle)] text-[var(--info-subtle-foreground)] flex items-center justify-center shrink-0">
-          <Arrow className="size-3.5" />
+        <div className={`size-7 rounded-full flex items-center justify-center shrink-0 ${tone}`}>
+          {icon}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[15px] font-medium truncate">{email.subject}</div>
+          <div className="text-[15px] font-medium truncate">
+            {label} · {OFFER_LABELS[action.offer_type]}
+          </div>
           <div className="text-xs text-muted-foreground truncate">
-            {isIncoming ? 'from' : 'to'}{' '}
-            {isIncoming ? email.from ?? '—' : email.to ?? '—'}
+            {action.approved_by ?? 'system'}
+            {action.predicted_retained_clv_usd !== null &&
+              ` · $${Math.round(action.predicted_retained_clv_usd).toLocaleString()} retained CLV`}
           </div>
         </div>
-        <div className="text-xs text-muted-foreground shrink-0">
-          {fmt(email.at)}
-        </div>
+        <div className="text-xs text-muted-foreground shrink-0">{fmt(action.decided_at ?? action.created_at)}</div>
         {expanded ? (
           <ChevronDown className="size-4 text-muted-foreground shrink-0" />
         ) : (
@@ -95,73 +74,57 @@ function EmailRow({ email }: { email: EmailEntry }) {
         )}
       </button>
       {expanded && (
-        <div className="px-4 py-3 border-t border-border text-sm whitespace-pre-wrap leading-relaxed bg-background">
-          {email.body}
+        <div className="px-4 py-3 border-t border-border bg-background space-y-3">
+          {action.drafted_summary && (
+            <div className="text-sm leading-relaxed flex items-start gap-2">
+              <Sparkles className="size-3.5 mt-0.5 text-muted-foreground shrink-0" />
+              <span className="whitespace-pre-wrap">{action.drafted_summary}</span>
+            </div>
+          )}
+          {action.timeline.length > 0 && (
+            <ol className="space-y-1.5">
+              {action.timeline.map((e) => (
+                <TimelineEntry key={e.event_id} entry={e} />
+              ))}
+            </ol>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-function AuditRow({ audit }: { audit: AuditEntry }) {
-  const { icon, tone, label } = describe(audit.action);
+function TimelineEntry({ entry }: { entry: CareActionTimelineEntry }) {
   return (
-    <div className="rounded-md border border-border bg-card px-4 py-2.5 flex items-start gap-3">
-      <div
-        className={`size-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${tone}`}
-      >
-        {icon}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-sm">
-          <span className="font-medium">{label}</span>
-          {audit.notes && (
-            <span className="text-muted-foreground"> · {audit.notes}</span>
-          )}
-        </div>
-        <div className="text-xs text-muted-foreground mt-0.5">
-          {audit.by}
-          {audit.tool && ` · via ${audit.tool}`}
-        </div>
-      </div>
-      <div className="text-xs text-muted-foreground shrink-0">
-        {fmt(audit.at)}
-      </div>
-    </div>
+    <li className="flex items-center gap-2 text-xs text-muted-foreground">
+      <span className="size-1.5 rounded-full bg-muted-foreground/50 shrink-0" aria-hidden />
+      <span className="font-medium text-foreground capitalize">{entry.event_type}</span>
+      {entry.notes && <span>· {entry.notes}</span>}
+      <span className="ml-auto shrink-0">{fmt(entry.at)}</span>
+    </li>
   );
 }
 
-function describe(action: AuditEntry['action']) {
-  switch (action) {
+function describe(status: SubscriberAction['status']) {
+  switch (status) {
     case 'approved':
+    case 'executed':
       return {
         icon: <CheckCircle2 className="size-3.5" />,
         tone: 'bg-[var(--success-subtle)] text-[var(--success-subtle-foreground)]',
-        label: 'Approved',
+        label: status === 'executed' ? 'Executed' : 'Approved',
       };
-    case 'rejected':
+    case 'declined':
       return {
         icon: <XCircle className="size-3.5" />,
         tone: 'bg-muted text-muted-foreground',
-        label: 'Rejected',
-      };
-    case 'escalated':
-      return {
-        icon: <AlertTriangle className="size-3.5" />,
-        tone: 'bg-[var(--warning-subtle)] text-[var(--warning-subtle-foreground)]',
-        label: 'Escalated',
-      };
-    case 'email_sent':
-      return {
-        icon: <MessageSquare className="size-3.5" />,
-        tone: 'bg-[var(--info-subtle)] text-[var(--info-subtle-foreground)]',
-        label: 'Email sent',
+        label: 'Declined',
       };
     default:
       return {
         icon: <StickyNote className="size-3.5" />,
         tone: 'bg-muted text-muted-foreground',
-        label: action,
+        label: 'Proposed',
       };
   }
 }
