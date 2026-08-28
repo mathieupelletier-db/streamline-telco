@@ -26,3 +26,25 @@ export async function authHeaders(req: Request): Promise<Headers> {
   await client.config.authenticate(h);
   return h;
 }
+
+/**
+ * Build the Authorization header using the APP'S SERVICE PRINCIPAL, never the
+ * forwarded user token.
+ *
+ * Why this exists separately from `authHeaders`: the OBO user token is minted
+ * as `(app user_api_scopes) ∩ (what the user consented to)`. For the LLM leg
+ * (OpenAI Agents loop → `/serving-endpoints/chat/completions`) that dependency
+ * on a fresh per-user `model-serving` consent is fragile — a stale grant makes
+ * the serving gateway reject the call with `Invalid scope, required scopes:
+ * model-serving` even after the app's scopes are correct. The app SP's token
+ * (injected `DATABRICKS_CLIENT_ID/SECRET`, broad `all-apis`) carries
+ * model-serving implicitly and needs no user consent, so the assistant works
+ * for every viewer. Genie / Lakebase / analytics keep using `authHeaders`
+ * (OBO) so those stay attributed + governed per user.
+ */
+export async function servicePrincipalAuthHeaders(): Promise<Headers> {
+  const h = new Headers();
+  const { client } = getExecutionContext();
+  await client.config.authenticate(h);
+  return h;
+}
