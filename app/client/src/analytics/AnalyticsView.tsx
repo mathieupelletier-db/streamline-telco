@@ -1,17 +1,20 @@
 /**
- * Analytics — warehouse-backed charts.
+ * Analytics — warehouse-backed charts (Streamline Telco).
  *
  * Template intent: surfaces the "lakehouse analytics" half of the story —
  * live SQL-warehouse queries against the Delta lakehouse (not a mock). The
  * header shows the warehouse name + state to make that obvious.
  *
  * How the data flows: each chart fetches `/api/charts/<key>` (see
- * server/routes/charts.ts). That route reads config/queries/<key>.sql —
- * written SCHEMA-RELATIVE (`FROM silver_returns`, no catalog/schema
- * qualifier) — and runs it with the demo's catalog+schema as the SQL
- * session context, so one env var (DEMO_CATALOG/DEMO_SCHEMA) drives the
- * analytics tables on any workspace. Rows come back via `useChartData` and
- * feed the chart components' `data` prop.
+ * server/routes/charts.ts). That route reads config/queries/<key>.sql,
+ * binds the demo's catalog+schema as :catalog/:schema params, and runs it —
+ * so one env var (DEMO_CATALOG/DEMO_SCHEMA) drives the analytics tables on
+ * any workspace. Rows come back via `useChartData` and feed the chart
+ * components' `data` prop.
+ *
+ * The four charts trace the churn crisis this demo is about: the daily
+ * CLV-at-risk trend (the dollars walking as the outage surfaces), the split
+ * by plan and by metro, and the worst service nodes (the outage epicenter).
  *
  * NOTE: we deliberately do NOT use AppKit's `useAnalyticsQuery` /
  * `<Chart queryKey=…>` plugin path — its query route can't set the
@@ -25,7 +28,6 @@ import { useEffect, useState } from 'react';
 import { BarChart, LineChart } from '@databricks/appkit-ui/react';
 import { fetchWarehouse, type Warehouse } from '@/lib/api';
 import { BRAND_PALETTE } from '@/lib/brand';
-import { FacilityPanel } from './FacilityPanel';
 import { RtPitch } from '@/architecture/RtPitch';
 
 /**
@@ -81,15 +83,15 @@ export function AnalyticsView() {
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 sm:py-10 space-y-6 sm:space-y-10">
         <div>
           <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-2">
-            Operations analytics
+            Retention analytics
           </div>
           <h1 className="display text-4xl font-semibold tracking-tight text-foreground mb-2">
-            Where the returns are coming from.
+            Where the churn risk is coming from.
           </h1>
           <p className="text-muted-foreground max-w-2xl">
             Live queries against the SQL warehouse — the same numbers the
-            assistant reasons about, on a single page. Use the queue to take
-            action; use this page to spot patterns.
+            assistant reasons about, on a single page. Use the care queue to
+            take action; use this page to spot the pattern.
           </p>
         </div>
 
@@ -102,19 +104,19 @@ export function AnalyticsView() {
           latencyMs={null}
         />
 
-        {/* Top row: two charts side-by-side. Trend (wider) + product mix. */}
+        {/* Top row: two charts side-by-side. Trend (wider) + plan mix. */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           <ChartCard
-            title="Daily refund value"
+            title="CLV at risk, daily"
             scope="Last 30 days"
             className="lg:col-span-3"
           >
-            <ChartData chartKey="daily_refund_trend" height={260}>
+            <ChartData chartKey="daily_clv_at_risk" height={260}>
               {(rows) => (
                 <LineChart
                   data={rows}
                   xKey="return_date"
-                  yKey="total_refund_usd"
+                  yKey="clv_at_risk_usd"
                   colors={[BRAND_PALETTE[0]]}
                   height={260}
                   smooth
@@ -124,16 +126,16 @@ export function AnalyticsView() {
           </ChartCard>
 
           <ChartCard
-            title="Top products by returns"
-            scope="All time"
+            title="At-risk CLV by plan"
+            scope="Current book"
             className="lg:col-span-2"
           >
-            <ChartData chartKey="returns_by_product" height={260}>
+            <ChartData chartKey="atrisk_by_plan" height={260}>
               {(rows) => (
                 <BarChart
                   data={rows}
-                  xKey="product_name"
-                  yKey="return_count"
+                  xKey="plan_type"
+                  yKey="clv_at_risk_usd"
                   colors={[BRAND_PALETTE[0]]}
                   height={260}
                 />
@@ -142,18 +144,30 @@ export function AnalyticsView() {
           </ChartCard>
         </div>
 
-        <FacilityPanel />
+        <ChartCard title="At-risk CLV by metro" scope="Current book">
+          <ChartData chartKey="atrisk_by_metro" height={260}>
+            {(rows) => (
+              <BarChart
+                data={rows}
+                xKey="home_metro"
+                yKey="clv_at_risk_usd"
+                colors={[BRAND_PALETTE[1]]}
+                height={260}
+              />
+            )}
+          </ChartData>
+        </ChartCard>
 
-        <ChartCard title="Worst production lots" scope="By return rate" flush>
+        <ChartCard title="Worst service nodes" scope="By at-risk rate" flush>
           {/* Desktop / tablet: compact custom table — appkit's DataTable
               auto-mode gives wide auto-sized columns; we want a denser
-              layout where Region + Returns + Rate + Refund fit without
-              overflow. Phone-only card list lives in WorstLotsMobile. */}
+              layout where Metro + Subscribers + At-risk + Rate + CLV fit
+              without overflow. Phone-only card list lives in WorstNodesMobile. */}
           <div className="hidden sm:block">
-            <WorstLotsTable />
+            <WorstNodesTable />
           </div>
           <div className="sm:hidden">
-            <WorstLotsMobile />
+            <WorstNodesMobile />
           </div>
         </ChartCard>
       </div>
@@ -163,9 +177,8 @@ export function AnalyticsView() {
 
 /**
  * Wraps a chart/table in a bordered card with a compact header (title +
- * scope chip). Cuts the wall-of-H2-text the page used to have and gives
- * every analytics block a consistent frame. `flush` removes inner padding
- * for components that draw their own (e.g. DataTable).
+ * scope chip). Gives every analytics block a consistent frame. `flush`
+ * removes inner padding for components that draw their own (e.g. tables).
  */
 function ChartCard({
   title,
@@ -238,21 +251,19 @@ function ChartData({
 }
 
 /**
- * worst_lots — phone card list + desktop dense table.
+ * worst_nodes — phone card list + desktop dense table.
  *
  * Both renderers share the query (one fetch), the row shape, the
  * severity thresholds, and the loading/error/empty states. The only
  * thing that varies between desktop and mobile is the row layout.
  */
-type WorstLotRow = {
-  lot_id: string;
-  product_name: string | null;
-  facility: string | null;
-  region: string | null;
-  return_count: number;
-  units_sold: number;
-  return_rate_pct: number;
-  total_refund_usd: number;
+type WorstNodeRow = {
+  service_node_id: string;
+  home_metro: string | null;
+  subscribers: number;
+  atrisk_count: number;
+  atrisk_rate_pct: number;
+  clv_at_risk_usd: number;
 };
 
 /** Color the rate by severity. Uses --severity-* tokens so a re-theme
@@ -268,13 +279,13 @@ const compactUsd = (n: number) =>
 
 /** Shared fetch + state-handling. Returns either ready data or a
  *  fallback ReactNode to render in the empty / loading / error cases. */
-function useWorstLots(): { data: WorstLotRow[] } | { fallback: React.ReactNode } {
-  const { data, error, isLoading } = useChartData<WorstLotRow>('worst_lots');
+function useWorstNodes(): { data: WorstNodeRow[] } | { fallback: React.ReactNode } {
+  const { data, error, isLoading } = useChartData<WorstNodeRow>('worst_nodes');
   if (error) {
     return {
       fallback: (
         <div className="px-4 py-3 text-sm text-destructive">
-          Couldn't load lots: {error}
+          Couldn't load nodes: {error}
         </div>
       ),
     };
@@ -292,7 +303,7 @@ function useWorstLots(): { data: WorstLotRow[] } | { fallback: React.ReactNode }
     return {
       fallback: (
         <div className="px-4 py-6 text-sm text-muted-foreground text-center">
-          No lots returned data.
+          No nodes returned data.
         </div>
       ),
     };
@@ -300,43 +311,40 @@ function useWorstLots(): { data: WorstLotRow[] } | { fallback: React.ReactNode }
   return { data };
 }
 
-function WorstLotsMobile() {
-  const r = useWorstLots();
+function WorstNodesMobile() {
+  const r = useWorstNodes();
   if ('fallback' in r) return r.fallback;
   return (
     <ul className="divide-y divide-border">
       {r.data.map((row) => (
-        <li key={row.lot_id} className="px-4 py-3">
+        <li key={row.service_node_id} className="px-4 py-3">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <div className="font-mono text-xs text-muted-foreground">
-                {row.lot_id}
+                {row.service_node_id}
               </div>
               <div className="text-sm font-medium truncate mt-0.5">
-                {row.product_name ?? '—'}
+                {row.home_metro ?? '—'}
               </div>
               <div className="text-xs text-muted-foreground mt-0.5">
-                {[row.facility, row.region].filter(Boolean).join(' · ') || '—'}
+                {row.atrisk_count.toLocaleString()} at risk ·{' '}
+                {row.subscribers.toLocaleString()} subscribers
               </div>
             </div>
             <div className="shrink-0 text-right">
               <div
-                className={`display text-xl font-semibold ${rateToneClass(row.return_rate_pct)}`}
+                className={`display text-xl font-semibold ${rateToneClass(row.atrisk_rate_pct)}`}
               >
-                {row.return_rate_pct}%
+                {row.atrisk_rate_pct}%
               </div>
               <div className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-                return rate
+                at-risk rate
               </div>
             </div>
           </div>
-          <div className="mt-2 flex items-center justify-between gap-3 text-xs text-muted-foreground">
-            <span>
-              {row.return_count.toLocaleString()} returned ·{' '}
-              {row.units_sold.toLocaleString()} sold
-            </span>
+          <div className="mt-2 flex items-center justify-end gap-3 text-xs text-muted-foreground">
             <span className="font-mono text-foreground">
-              {compactUsd(row.total_refund_usd)}
+              {compactUsd(row.clv_at_risk_usd)} CLV
             </span>
           </div>
         </li>
@@ -345,46 +353,42 @@ function WorstLotsMobile() {
   );
 }
 
-function WorstLotsTable() {
-  const r = useWorstLots();
+function WorstNodesTable() {
+  const r = useWorstNodes();
   if ('fallback' in r) return r.fallback;
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm tabular-nums">
         <thead className="text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
           <tr className="border-b border-border">
-            <th className="text-left font-medium px-3 py-2">Lot</th>
-            <th className="text-left font-medium px-3 py-2">Product</th>
-            <th className="text-left font-medium px-3 py-2">Facility</th>
-            <th className="text-left font-medium px-3 py-2">Region</th>
-            <th className="text-right font-medium px-3 py-2">Returns</th>
+            <th className="text-left font-medium px-3 py-2">Node</th>
+            <th className="text-left font-medium px-3 py-2">Metro</th>
+            <th className="text-right font-medium px-3 py-2">Subscribers</th>
+            <th className="text-right font-medium px-3 py-2">At risk</th>
             <th className="text-right font-medium px-3 py-2">Rate</th>
-            <th className="text-right font-medium px-3 py-2">Refund</th>
+            <th className="text-right font-medium px-3 py-2">CLV at risk</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
           {r.data.map((row) => (
-            <tr key={row.lot_id} className="hover:bg-muted/40">
-              <td className="px-3 py-2 font-mono text-xs">{row.lot_id}</td>
-              <td className="px-3 py-2 truncate max-w-[14rem]">
-                {row.product_name ?? '—'}
-              </td>
+            <tr key={row.service_node_id} className="hover:bg-muted/40">
+              <td className="px-3 py-2 font-mono text-xs">{row.service_node_id}</td>
               <td className="px-3 py-2 text-muted-foreground">
-                {row.facility ?? '—'}
-              </td>
-              <td className="px-3 py-2 text-muted-foreground">
-                {row.region ?? '—'}
+                {row.home_metro ?? '—'}
               </td>
               <td className="px-3 py-2 text-right">
-                {row.return_count.toLocaleString()}
+                {row.subscribers.toLocaleString()}
+              </td>
+              <td className="px-3 py-2 text-right">
+                {row.atrisk_count.toLocaleString()}
               </td>
               <td
-                className={`px-3 py-2 text-right font-semibold ${rateToneClass(row.return_rate_pct)}`}
+                className={`px-3 py-2 text-right font-semibold ${rateToneClass(row.atrisk_rate_pct)}`}
               >
-                {row.return_rate_pct}%
+                {row.atrisk_rate_pct}%
               </td>
               <td className="px-3 py-2 text-right font-mono">
-                {compactUsd(row.total_refund_usd)}
+                {compactUsd(row.clv_at_risk_usd)}
               </td>
             </tr>
           ))}

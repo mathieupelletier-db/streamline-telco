@@ -67,9 +67,10 @@ interface ChartsDeps {
 // Query key → filename. Only these keys are runnable (closed allowlist —
 // no arbitrary file reads from a user-supplied key).
 const QUERY_FILES: Record<string, string> = {
-  daily_refund_trend: 'daily_refund_trend.sql',
-  returns_by_product: 'returns_by_product.sql',
-  worst_lots: 'worst_lots.sql',
+  daily_clv_at_risk: 'daily_clv_at_risk.sql',
+  atrisk_by_plan: 'atrisk_by_plan.sql',
+  atrisk_by_metro: 'atrisk_by_metro.sql',
+  worst_nodes: 'worst_nodes.sql',
 };
 
 export function registerChartRoutes(app: Application, deps: ChartsDeps): void {
