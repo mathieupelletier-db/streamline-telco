@@ -35,8 +35,10 @@
   "agentMlflowExperimentPath": "${AGENT_MLFLOW_EXPERIMENT_PATH:}",
 
   // Embedded AI/BI dashboard (UUID). Empty → drop the /dashboard route +
-  // sidebar entry. Also a tile on /platform.
-  "dashboardId": "${DASHBOARD_ID:}",
+  // sidebar entry. Also a tile on /platform. Default is the demo's published
+  // "Streamline Retention" dashboard; DASHBOARD_ID (injected by
+  // finalize_app.sh on deploy) overrides it per workspace.
+  "dashboardId": "${DASHBOARD_ID:01f1a22acd02121d9f741a0440a2b1d4}",
 
   // Workspace resource IDs → deep-link URLs via /api/resources (PlatformDiagram
   // on /platform). Empty id → tile renders inert.

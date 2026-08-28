@@ -5,48 +5,56 @@ import type { SQLTypeMarker, SQLStringMarker, SQLNumberMarker, SQLBooleanMarker,
 
 declare module "@databricks/appkit-ui/react" {
   interface QueryRegistry {
-    daily_refund_trend: {
-        name: "daily_refund_trend";
+    daily_clv_at_risk: {
+        name: "daily_clv_at_risk";
         parameters: Record<string, never>;
         result: Array<{
-          /** @sqlType TIMESTAMP */
+          /** @sqlType DATE */
           return_date: string;
           /** @sqlType DOUBLE */
-          total_refund_usd: number;
+          clv_at_risk_usd: number;
         }>;
       };
-    returns_by_product: {
-        name: "returns_by_product";
+    atrisk_by_plan: {
+        name: "atrisk_by_plan";
         parameters: Record<string, never>;
         result: Array<{
           /** @sqlType STRING */
-          product_name: string;
+          plan_type: string;
           /** @sqlType BIGINT */
-          return_count: number;
+          subscriber_count: number;
           /** @sqlType DOUBLE */
-          total_refund_usd: number;
+          clv_at_risk_usd: number;
         }>;
       };
-    worst_lots: {
-        name: "worst_lots";
+    atrisk_by_metro: {
+        name: "atrisk_by_metro";
         parameters: Record<string, never>;
         result: Array<{
           /** @sqlType STRING */
-          lot_id: string;
-          /** @sqlType STRING */
-          product_name: string;
-          /** @sqlType STRING */
-          facility: string;
-          /** @sqlType STRING */
-          region: string;
+          home_metro: string;
           /** @sqlType BIGINT */
-          return_count: number;
+          subscriber_count: number;
+          /** @sqlType DOUBLE */
+          clv_at_risk_usd: number;
+        }>;
+      };
+    worst_nodes: {
+        name: "worst_nodes";
+        parameters: Record<string, never>;
+        result: Array<{
+          /** @sqlType STRING */
+          service_node_id: string;
+          /** @sqlType STRING */
+          home_metro: string;
           /** @sqlType BIGINT */
-          units_sold: number;
+          subscribers: number;
+          /** @sqlType BIGINT */
+          atrisk_count: number;
           /** @sqlType DOUBLE */
-          return_rate_pct: number;
+          atrisk_rate_pct: number;
           /** @sqlType DOUBLE */
-          total_refund_usd: number;
+          clv_at_risk_usd: number;
         }>;
       };
   }
