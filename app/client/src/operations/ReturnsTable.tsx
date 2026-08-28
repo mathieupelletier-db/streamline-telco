@@ -1,20 +1,20 @@
 /**
- * The filterable returns table. Status filter chips + search + lot chip +
- * the row list itself. Click a row → opens the detail drawer. Rows whose
- * status changed between dataMutated refetches pulse a soft primary
- * highlight (1.5s) so the user's eye lands on what the agent just flipped.
+ * The at-risk subscriber queue table. Risk-band filter chips + search + a
+ * churn-reason chip + the row list itself. Click a row → opens the subscriber
+ * drawer. Rows whose care-action status changed between dataMutated refetches
+ * pulse a soft primary highlight (1.5s) so the user's eye lands on what the
+ * agent (or a care lead) just actioned.
  */
 import { Search } from 'lucide-react';
 import { usePulseOnChange } from '@/lib/usePulseOnChange';
-import type { ReturnRow, ReturnStatus } from '@/shared/types';
-import { StatusBadge, TierBadge } from '@/shared/badges';
+import type { CareQueueRow, RiskBand } from '@/shared/types';
+import { RiskBadge, ReasonBadge, OfferBadge, StatusBadge } from '@/shared/badges';
 
-const STATUS_TABS: { value: ReturnStatus | 'all'; label: string }[] = [
+const BAND_TABS: { value: RiskBand | 'all'; label: string }[] = [
   { value: 'all', label: 'All' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'rejected', label: 'Rejected' },
-  { value: 'escalated', label: 'Escalated' },
+  { value: 'critical', label: 'Critical' },
+  { value: 'elevated', label: 'Elevated' },
+  { value: 'watch', label: 'Watch' },
 ];
 
 function SortHeader({
@@ -38,9 +38,7 @@ function SortHeader({
       className={`inline-flex items-center gap-1 ${
         align === 'right' ? 'flex-row-reverse' : ''
       } ${
-        active
-          ? 'text-foreground'
-          : 'text-muted-foreground hover:text-foreground'
+        active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
       } transition-colors cursor-pointer`}
     >
       {label}
@@ -65,14 +63,10 @@ function SkeletonRows() {
             <div className="mt-1.5 h-2 w-24 rounded bg-muted/70" />
           </td>
           <td className="px-4 py-3">
-            <div className="h-3 w-36 rounded bg-muted" />
-            <div className="mt-1.5 h-2 w-28 rounded bg-muted/70" />
-          </td>
-          <td className="px-4 py-3">
             <div className="h-3 w-28 rounded bg-muted" />
           </td>
           <td className="px-4 py-3">
-            <div className="h-3 w-40 rounded bg-muted" />
+            <div className="h-3 w-20 rounded bg-muted" />
           </td>
           <td className="px-4 py-3">
             <div className="h-1.5 w-12 rounded-full bg-muted" />
@@ -81,7 +75,7 @@ function SkeletonRows() {
             <div className="h-3 w-14 rounded bg-muted ml-auto" />
           </td>
           <td className="px-4 py-3">
-            <div className="h-4 w-20 rounded-md bg-muted" />
+            <div className="h-4 w-24 rounded-md bg-muted" />
           </td>
           <td className="px-4 py-3">
             <div className="h-4 w-16 rounded-full bg-muted" />
@@ -98,22 +92,20 @@ function SkeletonRows() {
   );
 }
 
-type SortKey = 'anger' | 'recent' | 'value';
+type SortKey = 'risk' | 'clv' | 'recent';
 
 type Props = {
-  rows: ReturnRow[];
+  rows: CareQueueRow[];
   loading: boolean;
   error: string | null;
-  statusFilter: ReturnStatus | 'all';
-  onStatusFilter: (s: ReturnStatus | 'all') => void;
+  bandFilter: RiskBand | 'all';
+  onBandFilter: (b: RiskBand | 'all') => void;
   search: string;
   onSearch: (s: string) => void;
-  lotFilter: string;
-  onLotFilter: (lot: string) => void;
-  tierFilter: 'premium' | 'standard' | null;
-  onTierFilter: (t: 'premium' | 'standard' | null) => void;
-  countryFilter: string | null;
-  onCountryFilter: (c: string | null) => void;
+  metroFilter: string;
+  onMetroFilter: (metro: string) => void;
+  reasonFilter: string | null;
+  onReasonFilter: (r: string | null) => void;
   sort: SortKey;
   onSortChange: (s: SortKey) => void;
   onSelect: (id: string) => void;
@@ -123,16 +115,14 @@ export function ReturnsTable({
   rows,
   loading,
   error,
-  statusFilter,
-  onStatusFilter,
+  bandFilter,
+  onBandFilter,
   search,
   onSearch,
-  lotFilter,
-  onLotFilter,
-  tierFilter,
-  onTierFilter,
-  countryFilter,
-  onCountryFilter,
+  metroFilter,
+  onMetroFilter,
+  reasonFilter,
+  onReasonFilter,
   sort,
   onSortChange,
   onSelect,
@@ -142,20 +132,18 @@ export function ReturnsTable({
       <div className="flex flex-wrap items-center gap-2">
         <div
           role="tablist"
-          aria-label="Status filter"
+          aria-label="Risk band filter"
           className="relative inline-flex rounded-full border border-border bg-card p-0.5 text-sm"
         >
-          {STATUS_TABS.map((s) => {
-            const active = statusFilter === s.value;
+          {BAND_TABS.map((s) => {
+            const active = bandFilter === s.value;
             return (
               <button
                 key={s.value}
-                onClick={() => onStatusFilter(s.value)}
+                onClick={() => onBandFilter(s.value)}
                 aria-pressed={active}
                 className={`relative z-10 rounded-full px-3 py-1 transition-colors duration-200 ${
-                  active
-                    ? 'text-background'
-                    : 'text-muted-foreground hover:text-foreground'
+                  active ? 'text-background' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {active && (
@@ -175,36 +163,24 @@ export function ReturnsTable({
           <input
             value={search}
             onChange={(e) => onSearch(e.target.value)}
-            placeholder="Search name, SKU, reason…"
+            placeholder="Search subscriber, metro, plan…"
             className="bg-transparent outline-none w-full sm:w-60 placeholder:text-muted-foreground"
           />
         </div>
-        {lotFilter && (
+        {metroFilter && (
           <button
-            onClick={() => onLotFilter('')}
+            onClick={() => onMetroFilter('')}
             className="text-xs rounded-full px-2 py-1 bg-muted text-foreground"
           >
-            Lot: {lotFilter} ✕
+            Metro: {metroFilter} ✕
           </button>
         )}
-        {tierFilter && (
+        {reasonFilter && (
           <button
-            onClick={() => onTierFilter(null)}
-            className={
-              tierFilter === 'premium'
-                ? 'text-xs rounded-full px-2 py-1 bg-primary/15 text-primary'
-                : 'text-xs rounded-full px-2 py-1 bg-muted text-foreground'
-            }
+            onClick={() => onReasonFilter(null)}
+            className="text-xs rounded-full px-2 py-1 bg-muted text-foreground capitalize"
           >
-            Tier: {tierFilter} ✕
-          </button>
-        )}
-        {countryFilter && (
-          <button
-            onClick={() => onCountryFilter(null)}
-            className="text-xs rounded-full px-2 py-1 bg-muted text-foreground"
-          >
-            Country: {countryFilter} ✕
+            Reason: {reasonFilter} ✕
           </button>
         )}
       </div>
@@ -217,363 +193,286 @@ export function ReturnsTable({
 
       <div className="relative rounded-xl border border-border bg-card overflow-hidden">
         {loading && (
-          <div
-            className="absolute inset-x-0 top-0 h-0.5 z-10 overflow-hidden"
-            aria-hidden
-          >
+          <div className="absolute inset-x-0 top-0 h-0.5 z-10 overflow-hidden" aria-hidden>
             <div
               className="h-full w-1/3 rounded-full"
-              style={{
-                background: 'var(--primary)',
-                animation: 'loadingBar 1.1s ease-in-out infinite',
-              }}
+              style={{ background: 'var(--primary)', animation: 'loadingBar 1.1s ease-in-out infinite' }}
             />
           </div>
         )}
-        {/* ───── PHONE: card list ─────
-            Status + offer badges live INSIDE the card so the agent's
-            pending→approved flip is always visible (the table-with-horizontal-
-            scroll variant hid the status column off-screen by default).
-            Same `usePulseOnChange(status)` ring so the live cascade reads
-            on phone too. */}
-        <ul className={`sm:hidden divide-y divide-border transition-opacity duration-150 ${
-          loading && rows.length > 0 ? 'opacity-70' : 'opacity-100'
-        }`}>
+
+        {/* ───── PHONE: card list ───── */}
+        <ul
+          className={`sm:hidden divide-y divide-border transition-opacity duration-150 ${
+            loading && rows.length > 0 ? 'opacity-70' : 'opacity-100'
+          }`}
+        >
           {loading && rows.length === 0 && (
-            <li className="px-4 py-6 text-center text-muted-foreground text-sm">
-              Loading…
-            </li>
+            <li className="px-4 py-6 text-center text-muted-foreground text-sm">Loading…</li>
           )}
           {!loading && rows.length === 0 && (
             <li className="px-4 py-8 text-center text-muted-foreground text-sm">
-              No returns match the current filters.
+              No subscribers match the current filters.
             </li>
           )}
           {rows.map((r) => (
             <MobileCard
-              key={r.id}
+              key={r.subscriberId}
               row={r}
-              tierFilter={tierFilter}
               onSelect={onSelect}
-              onLotFilter={onLotFilter}
-              onTierFilter={onTierFilter}
+              onMetroFilter={onMetroFilter}
+              onReasonFilter={onReasonFilter}
             />
           ))}
         </ul>
 
-        {/* ───── TABLET + DESKTOP: full table ─────
-            Hidden on phone (sm:block reveals it ≥ 640px). overflow-x-auto +
-            min-w-[920px] keeps the 8 columns readable on tablet via
-            horizontal scroll if the viewport is narrow. */}
+        {/* ───── TABLET + DESKTOP: full table ───── */}
         <div
           className={`hidden sm:block transition-opacity duration-150 overflow-x-auto ${
             loading && rows.length > 0 ? 'opacity-70' : 'opacity-100'
           }`}
         >
-        <table className="w-full min-w-[920px] text-sm">
-          <thead className="bg-muted text-xs uppercase tracking-wider text-muted-foreground">
-            <tr>
-              <th className="text-left px-4 py-2 font-semibold">Customer</th>
-              <th className="text-left px-4 py-2 font-semibold">Product</th>
-              <th className="text-left px-4 py-2 font-semibold">Lot</th>
-              <th className="text-left px-4 py-2 font-semibold">Reason</th>
-              <th className="text-left px-4 py-2 font-semibold">
-                <SortHeader
-                  label="Anger"
-                  active={sort === 'anger'}
-                  onClick={() =>
-                    onSortChange(sort === 'anger' ? 'recent' : 'anger')
-                  }
-                  hint="Sort by ai_classify anger score"
-                />
-              </th>
-              <th className="text-right px-4 py-2 font-semibold">
-                <SortHeader
-                  label="Value"
-                  align="right"
-                  active={sort === 'value'}
-                  onClick={() =>
-                    onSortChange(sort === 'value' ? 'recent' : 'value')
-                  }
-                  hint="Sort by refund value"
-                />
-              </th>
-              <th className="text-left px-4 py-2 font-semibold">Offer</th>
-              <th className="text-left px-4 py-2 font-semibold">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && rows.length === 0 && <SkeletonRows />}
-            {!loading && rows.length === 0 && (
+          <table className="w-full min-w-[880px] text-sm">
+            <thead className="bg-muted text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
-                <td
-                  colSpan={8}
-                  className="px-4 py-8 text-center text-muted-foreground"
-                >
-                  No returns match the current filters.
-                </td>
+                <th className="text-left px-4 py-2 font-semibold">Subscriber</th>
+                <th className="text-left px-4 py-2 font-semibold">Reason</th>
+                <th className="text-left px-4 py-2 font-semibold">Band</th>
+                <th className="text-left px-4 py-2 font-semibold">
+                  <SortHeader
+                    label="Risk"
+                    active={sort === 'risk'}
+                    onClick={() => onSortChange('risk')}
+                    hint="Sort by churn risk score"
+                  />
+                </th>
+                <th className="text-right px-4 py-2 font-semibold">
+                  <SortHeader
+                    label="CLV at risk"
+                    align="right"
+                    active={sort === 'clv'}
+                    onClick={() => onSortChange('clv')}
+                    hint="Sort by customer lifetime value at risk"
+                  />
+                </th>
+                <th className="text-left px-4 py-2 font-semibold">Recommended</th>
+                <th className="text-left px-4 py-2 font-semibold">Action</th>
               </tr>
-            )}
-            {rows.map((r) => (
-              <Row
-                key={r.id}
-                row={r}
-                tierFilter={tierFilter}
-                onSelect={onSelect}
-                onLotFilter={onLotFilter}
-                onTierFilter={onTierFilter}
-              />
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {loading && rows.length === 0 && <SkeletonRows />}
+              {!loading && rows.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                    No subscribers match the current filters.
+                  </td>
+                </tr>
+              )}
+              {rows.map((r) => (
+                <Row
+                  key={r.subscriberId}
+                  row={r}
+                  onSelect={onSelect}
+                  onMetroFilter={onMetroFilter}
+                  onReasonFilter={onReasonFilter}
+                />
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
   );
 }
 
+function AngerlessRiskBar({ score }: { score: number | null }) {
+  if (score === null) return <span className="text-xs text-muted-foreground">—</span>;
+  const pct = Math.min(100, Math.max(0, score * 100));
+  return (
+    <div className="flex items-center gap-1.5" title={`Churn risk score: ${(score * 100).toFixed(0)}%`}>
+      <div className="h-1.5 w-12 rounded-full bg-muted overflow-hidden">
+        <div
+          className={
+            score >= 0.7 ? 'h-full bg-destructive' : score >= 0.4 ? 'h-full bg-amber-500' : 'h-full bg-muted-foreground/50'
+          }
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <span className="font-mono text-[10px] tabular-nums text-muted-foreground w-7 text-right">
+        {(score * 100).toFixed(0)}
+      </span>
+    </div>
+  );
+}
+
 function Row({
   row: r,
-  tierFilter,
   onSelect,
-  onLotFilter,
-  onTierFilter,
+  onMetroFilter,
+  onReasonFilter,
 }: {
-  row: ReturnRow;
-  tierFilter: 'premium' | 'standard' | null;
+  row: CareQueueRow;
   onSelect: (id: string) => void;
-  onLotFilter: (lot: string) => void;
-  onTierFilter: (t: 'premium' | 'standard' | null) => void;
+  onMetroFilter: (metro: string) => void;
+  onReasonFilter: (r: string | null) => void;
 }) {
-  // Pulse the row when the agent flips its status (pending → approved is
-  // the load-bearing one). The hook ignores the first render so rows don't
-  // flash on page load, only on a real status change between refetches.
-  const statusPulse = usePulseOnChange(r.status);
+  // Pulse the row when a care action lands on this subscriber (null → approved
+  // is the load-bearing one). Ignores the first render so rows don't flash on
+  // page load, only on a real change between refetches.
+  const actionPulse = usePulseOnChange(r.actionStatus ?? 'none');
   return (
     <tr
-      onClick={() => onSelect(r.id)}
+      onClick={() => onSelect(r.subscriberId)}
       className={`cursor-pointer border-t border-border hover:bg-muted/50 transition-colors ${
-        statusPulse ? 'animate-pulse-row' : ''
+        actionPulse ? 'animate-pulse-row' : ''
       }`}
     >
       <td className="px-4 py-2">
-        <div className="font-medium">{r.customerName}</div>
+        <div className="font-mono font-medium">{r.subscriberId}</div>
         <div className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
-          {r.loyaltyTier && <TierBadge tier={r.loyaltyTier} />}
-          {r.finalTier === 'premium' && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onTierFilter(tierFilter === 'premium' ? null : 'premium');
-              }}
-              className={
-                r.premiumStatusLabeled === 'premium'
-                  ? 'rounded-full px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-primary/15 text-primary hover:bg-primary/25 transition-colors cursor-pointer'
-                  : 'rounded-full px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-primary/8 text-primary border border-primary/30 border-dashed hover:bg-primary/15 transition-colors cursor-pointer'
-              }
-              title={
-                r.premiumStatusLabeled === 'premium'
-                  ? `CS-tagged premium · model score ${r.premiumProb !== null ? (r.premiumProb * 100).toFixed(0) + '%' : '—'} · click to filter`
-                  : `Hidden premium (model-found, not CS-tagged) · score ${r.premiumProb !== null ? (r.premiumProb * 100).toFixed(0) + '%' : '—'} · click to filter`
-              }
-            >
-              {r.premiumStatusLabeled === 'premium'
-                ? 'premium'
-                : 'premium · hidden'}
-            </button>
+          {r.planType && <span className="capitalize">{r.planType}</span>}
+          {r.homeMetro && (
+            <>
+              <span>·</span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMetroFilter(r.homeMetro ?? '');
+                }}
+                className="hover:text-foreground"
+              >
+                {r.homeMetro}
+              </button>
+            </>
           )}
-          {r.region ?? ''}
         </div>
       </td>
       <td className="px-4 py-2">
-        <div className="font-medium">{r.productName ?? '—'}</div>
-        <div className="text-xs text-muted-foreground">
-          {r.category ?? ''} · {r.sku ?? ''}
-        </div>
-      </td>
-      <td className="px-4 py-2">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onLotFilter(r.lot ?? '');
-          }}
-          className="font-mono text-xs text-muted-foreground hover:text-foreground"
-        >
-          {r.lot ?? '—'}
-        </button>
-      </td>
-      <td className="px-4 py-2 text-muted-foreground">
-        {r.returnReason ?? '—'}
-      </td>
-      <td className="px-4 py-2">
-        {r.angerScore !== null ? (
-          <div
-            className="flex items-center gap-1.5"
-            title={`Anger score: ${(r.angerScore * 100).toFixed(0)}% (from ai_classify on the customer's return comment)`}
+        {r.churnReason ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onReasonFilter(r.churnReason);
+            }}
           >
-            <div className="h-1.5 w-12 rounded-full bg-muted overflow-hidden">
-              <div
-                className={
-                  r.angerScore >= 0.7
-                    ? 'h-full bg-destructive'
-                    : r.angerScore >= 0.4
-                      ? 'h-full bg-amber-500'
-                      : 'h-full bg-muted-foreground/50'
-                }
-                style={{ width: `${Math.min(100, Math.max(0, r.angerScore * 100))}%` }}
-              />
-            </div>
-            <span className="font-mono text-[10px] tabular-nums text-muted-foreground w-7 text-right">
-              {(r.angerScore * 100).toFixed(0)}
-            </span>
-          </div>
+            <ReasonBadge reason={r.churnReason} />
+          </button>
         ) : (
           <span className="text-xs text-muted-foreground">—</span>
         )}
+      </td>
+      <td className="px-4 py-2">
+        <RiskBadge band={r.riskBand} />
+      </td>
+      <td className="px-4 py-2">
+        <AngerlessRiskBar score={r.churnRiskScore} />
       </td>
       <td className="px-4 py-2 text-right font-mono">
-        ${r.returnValueUsd}
+        {r.clvAtRiskUsd !== null ? `$${Math.round(r.clvAtRiskUsd).toLocaleString()}` : '—'}
       </td>
       <td className="px-4 py-2">
-        {r.couponPctApplied !== null ? (
-          <span
-            className={`rounded-md px-2 py-0.5 text-xs font-mono ${
-              r.couponPctApplied >= 20
-                ? 'bg-primary/15 text-primary'
-                : 'bg-muted text-muted-foreground'
-            }`}
-          >
-            {r.couponPctApplied}% coupon
-          </span>
+        {r.recommendedOffer ? <OfferBadge offer={r.recommendedOffer} /> : <span className="text-xs text-muted-foreground">—</span>}
+      </td>
+      <td className="px-4 py-2">
+        {r.actionStatus ? (
+          <StatusBadge status={r.actionStatus} />
         ) : (
-          <span className="text-xs text-muted-foreground">—</span>
+          <span className="text-xs text-muted-foreground">Pending</span>
         )}
-      </td>
-      <td className="px-4 py-2">
-        <StatusBadge status={r.status} />
       </td>
     </tr>
   );
 }
 
 /**
- * Phone-only card for one return. Stacks the same fields the desktop Row
- * shows, with the status badge prominent top-right so the agent's
- * pending→approved flip is impossible to miss. Same pulse-ring on status
- * change as the desktop row.
+ * Phone-only card for one subscriber. Stacks the same fields the desktop Row
+ * shows, with the action status prominent top-right so the retention action
+ * landing is impossible to miss.
  */
 function MobileCard({
   row: r,
-  tierFilter,
   onSelect,
-  onLotFilter,
-  onTierFilter,
+  onMetroFilter,
+  onReasonFilter,
 }: {
-  row: ReturnRow;
-  tierFilter: 'premium' | 'standard' | null;
+  row: CareQueueRow;
   onSelect: (id: string) => void;
-  onLotFilter: (lot: string) => void;
-  onTierFilter: (t: 'premium' | 'standard' | null) => void;
+  onMetroFilter: (metro: string) => void;
+  onReasonFilter: (r: string | null) => void;
 }) {
-  const statusPulse = usePulseOnChange(r.status);
+  const actionPulse = usePulseOnChange(r.actionStatus ?? 'none');
   return (
     <li
-      onClick={() => onSelect(r.id)}
+      onClick={() => onSelect(r.subscriberId)}
       className={`px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors ${
-        statusPulse ? 'animate-pulse-row' : ''
+        actionPulse ? 'animate-pulse-row' : ''
       }`}
     >
-      {/* Row 1 — name (left) + status & offer badges (right) */}
+      {/* Row 1 — subscriber id (left) + band & action badges (right) */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="font-medium text-sm truncate">{r.customerName}</div>
+          <div className="font-mono font-medium text-sm truncate">{r.subscriberId}</div>
           <div className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap mt-0.5">
-            {r.loyaltyTier && <TierBadge tier={r.loyaltyTier} />}
-            {r.finalTier === 'premium' && (
+            {r.planType && <span className="capitalize">{r.planType}</span>}
+            {r.homeMetro && (
+              <>
+                <span>·</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMetroFilter(r.homeMetro ?? '');
+                  }}
+                >
+                  {r.homeMetro}
+                </button>
+              </>
+            )}
+            {r.churnReason && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onTierFilter(tierFilter === 'premium' ? null : 'premium');
+                  onReasonFilter(r.churnReason);
                 }}
-                className={
-                  r.premiumStatusLabeled === 'premium'
-                    ? 'rounded-full px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-primary/15 text-primary'
-                    : 'rounded-full px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-primary/8 text-primary border border-primary/30 border-dashed'
-                }
               >
-                {r.premiumStatusLabeled === 'premium' ? 'premium' : 'premium · hidden'}
+                <ReasonBadge reason={r.churnReason} />
               </button>
             )}
-            {r.region}
           </div>
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">
-          <StatusBadge status={r.status} />
-          {r.couponPctApplied !== null && (
-            <span
-              className={`rounded-md px-1.5 py-0.5 text-[10px] font-mono ${
-                r.couponPctApplied >= 20
-                  ? 'bg-primary/15 text-primary'
-                  : 'bg-muted text-muted-foreground'
-              }`}
-            >
-              {r.couponPctApplied}% coupon
-            </span>
-          )}
+          <RiskBadge band={r.riskBand} />
+          {r.actionStatus && <StatusBadge status={r.actionStatus} />}
         </div>
       </div>
 
-      {/* Row 2 — product + SKU */}
-      <div className="mt-2 text-sm">
-        <span className="text-foreground">{r.productName ?? '—'}</span>
-        <span className="text-xs text-muted-foreground">
-          {r.category ? ` · ${r.category}` : ''}
-          {r.sku ? ` · ${r.sku}` : ''}
-        </span>
-      </div>
-
-      {/* Row 3 — lot + reason + value (right-aligned $) */}
-      <div className="mt-1.5 flex items-center justify-between gap-3 text-xs text-muted-foreground">
-        <div className="flex items-center gap-2 min-w-0 flex-wrap">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onLotFilter(r.lot ?? '');
-            }}
-            className="font-mono hover:text-foreground"
-          >
-            {r.lot ?? '—'}
-          </button>
-          {r.returnReason && (
-            <>
-              <span>·</span>
-              <span>{r.returnReason}</span>
-            </>
-          )}
+      {/* Row 2 — recommended offer + CLV at risk (right-aligned $) */}
+      <div className="mt-2 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+        <div>
+          {r.recommendedOffer ? <OfferBadge offer={r.recommendedOffer} /> : <span>No recommendation yet</span>}
         </div>
         <div className="font-mono text-foreground shrink-0">
-          ${r.returnValueUsd}
+          {r.clvAtRiskUsd !== null ? `$${Math.round(r.clvAtRiskUsd).toLocaleString()}` : '—'}
         </div>
       </div>
 
-      {/* Row 4 — anger bar */}
-      {r.angerScore !== null && (
+      {/* Row 3 — risk bar */}
+      {r.churnRiskScore !== null && (
         <div className="mt-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
-          <span className="uppercase tracking-[0.12em] font-semibold">Anger</span>
+          <span className="uppercase tracking-[0.12em] font-semibold">Risk</span>
           <div className="h-1.5 flex-1 max-w-[120px] rounded-full bg-muted overflow-hidden">
             <div
               className={
-                r.angerScore >= 0.7
+                r.churnRiskScore >= 0.7
                   ? 'h-full bg-destructive'
-                  : r.angerScore >= 0.4
+                  : r.churnRiskScore >= 0.4
                     ? 'h-full bg-amber-500'
                     : 'h-full bg-muted-foreground/50'
               }
-              style={{ width: `${Math.min(100, Math.max(0, r.angerScore * 100))}%` }}
+              style={{ width: `${Math.min(100, Math.max(0, r.churnRiskScore * 100))}%` }}
             />
           </div>
           <span className="font-mono tabular-nums w-6 text-right">
-            {(r.angerScore * 100).toFixed(0)}
+            {(r.churnRiskScore * 100).toFixed(0)}
           </span>
         </div>
       )}

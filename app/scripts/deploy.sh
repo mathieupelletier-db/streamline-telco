@@ -109,19 +109,56 @@ if ! err="$(databricks workspace import-dir . "$WS_PATH" ${PROFILE_FLAG[@]+"${PR
     exit 1
 fi
 
-# 2) Create the App resource if missing. Scopes are NOT set here — the app's
-#    OBO scopes come from `app.yaml`'s `user_authorization.scopes` (incl.
-#    `model-serving`), which `databricks apps deploy` (step 3) applies from the
-#    uploaded source. Do NOT set `user_api_scopes` via `apps create/update` on
-#    this interactive path — it overrides/clobbers the app.yaml scopes (using a
-#    different scope vocabulary, e.g. serving.serving-endpoints ≠ model-serving)
-#    and the agent then 403s "required scopes: model-serving".
+# 2) Create the App resource if missing.
 if ! databricks apps get "$APP_NAME" ${PROFILE_FLAG[@]+"${PROFILE_FLAG[@]}"} >/dev/null 2>&1; then
     echo "[deploy] creating app $APP_NAME"
     if ! err="$(databricks apps create "$APP_NAME" ${PROFILE_FLAG[@]+"${PROFILE_FLAG[@]}"} 2>&1 1>/dev/null)"; then
         explain_apps_error create "$err"
         exit 1
     fi
+fi
+
+# 2a) Set the app's OBO user-authorization scopes on the APP RESOURCE.
+#     `databricks apps deploy` does NOT reliably propagate app.yaml's
+#     `user_authorization.scopes` onto the resource — a successful deploy can
+#     still leave `user_api_scopes: null`, so `effective_user_api_scopes` holds
+#     only the iam defaults and the agent 403s "required scopes: model-serving".
+#     The resource-level `user_api_scopes` field is the source of truth; it uses
+#     the SAME vocabulary as app.yaml (model-serving / genie / sql / postgres /
+#     catalog.*:read). We parse the scopes out of app.yaml so the two stay in
+#     sync, and set them via `apps update`. NOTE: widening scopes requires each
+#     viewer to re-open the app and accept the updated OAuth consent screen
+#     before their forwarded OBO token carries the new scopes.
+APP_SCOPES_JSON="$(python3 - "$APP_DIR/app.yaml" "$APP_NAME" <<'PY'
+import sys, json
+path, app_name = sys.argv[1], sys.argv[2]
+scopes, in_ua, in_scopes = [], False, False
+for raw in open(path):
+    line = raw.rstrip("\n")
+    if line.startswith("user_authorization:"):
+        in_ua = True; continue
+    if in_ua and not line.startswith((" ", "\t")) and line.strip():
+        break  # dedented to a new top-level key → block ended
+    s = line.strip()
+    if in_ua and s.startswith("scopes:"):
+        in_scopes = True; continue
+    if in_scopes:
+        if s.startswith("- "):
+            scopes.append(s[2:].split("#", 1)[0].strip())
+        elif s and not s.startswith("#"):
+            in_scopes = False
+print(json.dumps({"name": app_name, "user_api_scopes": scopes}))
+PY
+)"
+if [[ -n "$APP_SCOPES_JSON" ]] && echo "$APP_SCOPES_JSON" | grep -q '"user_api_scopes": \[.'; then
+    echo "[deploy] setting app OBO scopes (user_api_scopes) from app.yaml"
+    if ! err="$(databricks apps update "$APP_NAME" --json "$APP_SCOPES_JSON" ${PROFILE_FLAG[@]+"${PROFILE_FLAG[@]}"} 2>&1 1>/dev/null)"; then
+        echo "[deploy] WARNING: could not set user_api_scopes — the agent may 403 on model-serving." >&2
+        echo "[deploy]   $err" >&2
+        echo "[deploy]   Set them manually: databricks apps update $APP_NAME --json '$APP_SCOPES_JSON'" >&2
+    fi
+else
+    echo "[deploy] WARNING: no user_authorization.scopes parsed from app.yaml — skipping scope set." >&2
 fi
 
 # 3) Deploy the uploaded source.

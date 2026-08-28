@@ -43,7 +43,7 @@ import type { Tool } from '@openai/agents';
 import { loggedTool as tool } from './tools/logged-tool.js';
 import * as mlflow from 'mlflow-tracing';
 import { z } from 'zod';
-import { authHeaders } from '../lib/auth.js';
+import { servicePrincipalAuthHeaders } from '../lib/auth.js';
 import type { AppDb } from '../db/index.js';
 import {
   getAtriskSubscriber,
@@ -319,7 +319,14 @@ function makeTools(ctx: AgentContext): Tool[] {
 }
 
 export async function configureAgentsSdk(ctx: AgentContext): Promise<void> {
-  const headers = await authHeaders(ctx.req);
+  // The LLM leg authenticates as the app SERVICE PRINCIPAL, not the forwarded
+  // user (OBO) token. The SP's broad token carries `model-serving` implicitly,
+  // so the assistant doesn't depend on each viewer having a fresh per-user
+  // `model-serving` consent — a stale/under-scoped OBO grant otherwise makes
+  // the serving gateway 403 "Invalid scope, required scopes: model-serving".
+  // Genie / Lakebase / analytics still use the OBO token (see authHeaders) so
+  // those remain governed + attributed per user. See lib/auth.ts.
+  const headers = await servicePrincipalAuthHeaders();
   const bearer = headers.get('Authorization')?.replace(/^Bearer /, '') ?? '';
   // Custom fetch: fresh TCP connection per call (avoids the stale-socket 502
   // after a long ask_data hop) + strip the >64-char `input[*].id` the SDK

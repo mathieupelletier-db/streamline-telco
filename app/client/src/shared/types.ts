@@ -75,10 +75,7 @@ export type OfferRow = {
 export type AuditEntry = {
   at: string;
   by: string;
-  // Streamline actions + the legacy template actions ('rejected'/'escalated'/
-  // 'email_sent') the unchanged operations/ views still switch on. Trainees
-  // narrow this to their real action set when they rebuild the views.
-  action: 'proposed' | 'approved' | 'executed' | 'declined' | 'note' | 'rejected' | 'escalated' | 'email_sent';
+  action: 'proposed' | 'approved' | 'executed' | 'declined' | 'note';
   notes?: string;
   tool?: string;
 };
@@ -111,165 +108,125 @@ export type CareActionDetail = {
   decided_at: string | null;
 };
 
-export type SubscriberSummary = {
+// ── Care Desk queue + drawer (telco) ─────────────────────────────────────────
+// These mirror the server shapes in server/db/queries/caredesk.ts. The
+// Operations page (queue + map + drawer), Home activity feed, and Analytics
+// tables all read from here.
+
+/** One row in the care-desk queue: an at-risk subscriber, its ML retention
+ *  recommendation, and the latest care action taken on it (if any). */
+export type CareQueueRow = {
+  subscriberId: string;
+  planType: string | null;
+  tenureMonths: number | null;
+  monthlyArpuUsd: number | null;
+  homeMetro: string | null;
+  subLat: number | null;
+  subLng: number | null;
+  churnRiskScore: number | null;
+  churnReason: ChurnReason | null;
+  riskBand: RiskBand;
+  openTicketCount: number | null;
+  hasOpenOutage: boolean | null;
+  hasOpenBilling: boolean | null;
+  clvAtRiskUsd: number | null;
+  recommendedOffer: OfferType | null;
+  predictedRetainedClvUsd: number | null;
+  predictedNetValueUsd: number | null;
+  /** null until a care action exists for this subscriber. */
+  actionStatus: CareActionStatus | null;
+  actionOfferType: OfferType | null;
+  actionAt: string | null;
+};
+
+/** KPI counts for the top of the care-desk queue. */
+export type CareSummary = {
   total_at_risk: number;
   total_critical: number;
   total_elevated: number;
+  total_watch: number;
+  total_actioned: number;
   total_clv_at_risk_usd: number;
-  avg_churn_risk_score: number;
+  total_clv_saved_usd: number;
 };
 
-
-// ── Legacy template types (LuxeBeauty returns) — kept so the unchanged
-// client operations/ views still compile. Trainees rebuild those views for
-// the Streamline Care Desk (subscriber queue + retention drawer); until then
-// these keep tsc green. Safe to delete once the views are rekeyed.
-export type ReturnStatus = 'pending' | 'approved' | 'rejected' | 'escalated';
-export type Decision = 'approved' | 'rejected' | 'escalated';
-
-export type ReturnRow = {
-  id: string;
-  customerId: string | null;
-  customerName: string;
-  customerEmail: string;
-  loyaltyTier: string | null;
-  /** Premium tier from the ML model's predictions mirror. `null` when
-   * no prediction exists (or when the demo doesn't have an ML model). */
-  finalTier: 'premium' | 'standard' | null;
-  /** Original CS hand-tag (pass-through). `null` = "never reviewed by
-   * CS"; combined with `finalTier='premium'` this means the model
-   * surfaced a hidden premium — the demo's load-bearing story beat. */
-  premiumStatusLabeled: 'premium' | 'not_premium' | null;
-  /** Raw model output, 0.0–1.0. `null` when no prediction exists. */
-  premiumProb: number | null;
-  /** Per-return anger score from `ai_classify(return_reason_text)` in SDP.
-   * 0=benign, 0.5=neutral, 1=angry. Drives the Operations queue's
-   * default sort so the most upset customers float to the top. */
-  angerScore: number | null;
-  sku: string | null;
-  productName: string | null;
-  category: string | null;
-  lot: string | null;
-  returnReason: string | null;
-  returnValueUsd: string;
-  status: ReturnStatus;
-  /** Percent-off coupon the agent's bulk tool applied to this row,
-   * picked by tier (20 for 'premium', 5 for 'standard'). `null` until
-   * the bulk tool has run. */
-  couponPctApplied: number | null;
-  region: string | null;
-  returnDate: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type EmailEntry = {
-  at: string;
-  direction: 'outgoing' | 'incoming';
-  from?: string;
-  to?: string;
-  subject: string;
-  body: string;
-};
-
-
-export type ReturnDetail = {
-  return_id: string;
-  order_id: string | null;
-  lot_id: string | null;
-  facility: string | null;
-  product_id: string | null;
-  product_name: string | null;
-  category: string | null;
-  return_reason: string | null;
-  return_reason_text: string | null;
-  anger_score: number | null;
-  refund_amount_usd: string;
-  status: ReturnStatus;
-  coupon_pct_applied: number | null;
-  region: string | null;
-  return_date: string | null;
-  order_date: string | null;
-  decided_at: string | null;
-  created_at: string;
-  updated_at: string;
-  customer_id: string | null;
-  customer_name: string | null;
-  customer_email: string | null;
-  loyalty_tier: string | null;
-  customer_region: string | null;
-  customer_country: string | null;
-  registration_date: string | null;
-  order_total_usd: string | null;
-  final_tier: 'premium' | 'standard' | null;
-  premium_status_labeled: 'premium' | 'not_premium' | null;
-  premium_prob: number | null;
-  predicted_at: string | null;
-  emails: EmailEntry[];
-  ai_audit_trail: AuditEntry[];
-};
-
-export type ReturnsSummary = {
-  status: ReturnStatus;
-  n: number;
-  total_usd: string;
-};
-
-/** Per-city aggregation for the Operations bubble map. One row per
- *  (city, country) with averaged customer_lat / customer_lng. The map
- *  plots a circle at (lat, lng), sized by `total`, colored by the
- *  premium share. */
-export type CityBucket = {
-  city: string;
-  country: string;
+/** Per-metro aggregation for the care-desk bubble map. One bubble per home
+ *  metro at averaged (lat, lng), sized by at-risk `count`. */
+export type MetroBucket = {
+  metro: string;
   lat: number;
   lng: number;
-  total: number;
-  premium: number;
-  refund_usd: number;
+  count: number;
+  actioned: number;
+  clv_at_risk_usd: number;
 };
 
-export type FacilityRow = {
-  facility: string;
-  return_count: number;
-  pending_count: number;
-  total_refund_usd: string;
+/** One entry in the Home activity feed — a recent care action. */
+export type CareActivity = {
+  action_id: string;
+  subscriber_id: string;
+  offer_type: OfferType;
+  status: CareActionStatus;
+  approved_by: string | null;
+  predicted_retained_clv_usd: number | null;
+  drafted_summary: string | null;
+  home_metro: string | null;
+  plan_type: string | null;
+  at: string;
 };
 
-export type FacilityLotRow = {
-  lot_id: string;
-  return_count: number;
-  pending_count: number;
-  total_refund_usd: string;
-  product_count: number;
-  product_names: string | null;
+/** One option in the ML model's ranked offer list. */
+export type OfferOption = {
+  offerType: OfferType;
+  costUsd: number;
+  predictedRetainedClvUsd: number;
+  predictedNetValueUsd: number;
 };
 
-export type CustomerOrder = {
-  order_id: string;
-  order_date: string | null;
-  total_usd: string;
-  status: string | null;
-  item_count: number;
+export type CareActionTimelineEntry = {
+  event_id: string;
+  event_type: string;
+  actor_email: string | null;
+  notes: string | null;
+  at: string;
 };
 
-export type ActivityEvent =
-  | {
-      kind: 'email';
-      return_id: string;
-      at: string;
-      direction: 'outgoing' | 'incoming';
-      from: string | null;
-      to: string | null;
-      subject: string;
-      body: string;
-    }
-  | {
-      kind: 'audit';
-      return_id: string;
-      at: string;
-      by: string;
-      action: string;
-      notes: string | null;
-      tool: string | null;
-    };
+/** A care action as rendered in the subscriber drawer's Activity tab. */
+export type SubscriberAction = {
+  action_id: string;
+  offer_type: OfferType;
+  offer_id: string | null;
+  status: CareActionStatus;
+  approved_by: string | null;
+  predicted_retained_clv_usd: number | null;
+  drafted_summary: string | null;
+  created_at: string;
+  decided_at: string | null;
+  timeline: CareActionTimelineEntry[];
+};
+
+/** Full subscriber view for the detail drawer. */
+export type SubscriberDetail = {
+  subscriber_id: string;
+  plan_type: string | null;
+  tenure_months: number | null;
+  monthly_arpu_usd: number | null;
+  service_node_id: string | null;
+  home_metro: string | null;
+  sub_lat: number | null;
+  sub_lng: number | null;
+  service_summary: string | null;
+  churn_risk_score: number | null;
+  churn_reason: ChurnReason | null;
+  open_ticket_count: number | null;
+  has_open_outage: boolean | null;
+  has_open_billing: boolean | null;
+  churn_signal_score: number | null;
+  clv_at_risk_usd: number | null;
+  risk_band: RiskBand;
+  recommended_offer: OfferType | null;
+  predicted_retained_clv_usd: number | null;
+  predicted_net_value_usd: number | null;
+  offer_ranking: OfferOption[];
+  actions: SubscriberAction[];
+};

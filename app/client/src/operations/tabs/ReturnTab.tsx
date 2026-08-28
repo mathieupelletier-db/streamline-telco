@@ -1,40 +1,58 @@
 /**
- * "Return" tab of the drawer. Shows return-level fields + decision
- * history + the approve/reject/escalate form.
+ * "Retention" tab of the subscriber drawer. Shows the churn drivers, the ML
+ * model's ranked retention offers, and an approve/decline form that records a
+ * care action (the same write the agent makes via execute_retention_action).
  */
-import { useEffect, useState } from 'react';
-import { AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
-import { decideReturn } from '@/lib/returns';
-import type { Decision, ReturnDetail } from '@/shared/types';
+import { useEffect, useMemo, useState } from 'react';
+import { CheckCircle2, XCircle } from 'lucide-react';
+import { decideSubscriber } from '@/lib/caredesk';
+import { OFFER_LABELS } from '@/shared/badges';
+import type { OfferType, SubscriberDetail } from '@/shared/types';
 
 export function ReturnTab({
   detail,
   onMutated,
 }: {
-  detail: ReturnDetail;
+  detail: SubscriberDetail;
   onMutated: () => void;
 }) {
+  const ranked = useMemo(
+    () => [...(detail.offer_ranking ?? [])].sort((a, b) => b.predictedNetValueUsd - a.predictedNetValueUsd),
+    [detail.offer_ranking],
+  );
+  const defaultOffer: OfferType =
+    detail.recommended_offer ?? ranked[0]?.offerType ?? 'bill_credit';
+
+  const [selectedOffer, setSelectedOffer] = useState<OfferType>(defaultOffer);
   const [notes, setNotes] = useState('');
-  const [pending, setPending] = useState<Decision | null>(null);
+  const [pending, setPending] = useState<'approved' | 'declined' | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // Final-state rows have action buttons disabled by default to prevent
-  // an accidental approved → rejected flip. Operator can opt in to an
-  // override (rare but real — e.g. CS reopens a refund).
-  const [overrideFinal, setOverrideFinal] = useState(false);
-  // Reset override + notes when the drawer switches rows so opening
-  // another already-decided return doesn't inherit the previous one's
-  // override flag or notes draft.
+
+  // Reset selection + notes when the drawer switches subscribers.
   useEffect(() => {
-    setOverrideFinal(false);
+    setSelectedOffer(defaultOffer);
     setNotes('');
     setError(null);
-  }, [detail.return_id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detail.subscriber_id]);
 
-  async function decide(d: Decision) {
-    setPending(d);
+  const latestAction = detail.actions[0] ?? null;
+  const isDecided = latestAction !== null;
+
+  async function decide(decision: 'approved' | 'declined') {
+    setPending(decision);
     setError(null);
     try {
-      await decideReturn(detail.return_id, d, notes || undefined);
+      const predicted =
+        ranked.find((o) => o.offerType === selectedOffer)?.predictedRetainedClvUsd ??
+        detail.predicted_retained_clv_usd ??
+        null;
+      await decideSubscriber(detail.subscriber_id, {
+        decision,
+        offerType: selectedOffer,
+        predictedRetainedClvUsd: predicted,
+        notes: notes || undefined,
+      });
       onMutated();
     } catch (e) {
       setError((e as Error).message);
@@ -43,54 +61,101 @@ export function ReturnTab({
     }
   }
 
-  const isFinal = detail.status !== 'pending';
-  const actionsLocked = isFinal && !overrideFinal;
-
   return (
     <div className="space-y-6 max-w-2xl">
-      {/* Phone: 2-up grid so short fields pair up (Return date / Order date,
-          Order total / Region) — saves vertical space so the drawer fits
-          without scroll. Reason spans both columns (long text).
-          sm+: 1 column of full-width rows; DetailRow renders its own
-          internal label/value split. */}
+      {/* Churn drivers */}
       <dl className="grid grid-cols-2 sm:grid-cols-1 gap-x-4 gap-y-3 sm:gap-y-4 text-sm">
         <DetailRow
-          label="Reason"
-          value={detail.return_reason_text ?? detail.return_reason ?? '—'}
-          full
-        />
-        <DetailRow
-          label="Refund"
-          value={`$${Number(detail.refund_amount_usd).toLocaleString()}`}
-        />
-        <DetailRow label="Return date" value={detail.return_date ?? '—'} />
-        <DetailRow label="Order date" value={detail.order_date ?? '—'} />
-        <DetailRow
-          label="Order total"
+          label="Churn risk"
           value={
-            detail.order_total_usd
-              ? `$${Number(detail.order_total_usd).toLocaleString()}`
+            detail.churn_risk_score !== null
+              ? `${(detail.churn_risk_score * 100).toFixed(0)}%`
               : '—'
           }
         />
-        <DetailRow label="Region" value={detail.region ?? '—'} />
+        <DetailRow
+          label="CLV at risk"
+          value={
+            detail.clv_at_risk_usd !== null
+              ? `$${Math.round(detail.clv_at_risk_usd).toLocaleString()}`
+              : '—'
+          }
+        />
+        <DetailRow label="Open tickets" value={detail.open_ticket_count ?? 0} />
+        <DetailRow
+          label="Signals"
+          value={
+            [
+              detail.has_open_outage ? 'Outage' : null,
+              detail.has_open_billing ? 'Billing' : null,
+            ]
+              .filter(Boolean)
+              .join(' · ') || 'None'
+          }
+        />
+        <DetailRow label="Service history" value={detail.service_summary ?? '—'} full />
       </dl>
 
-      {isFinal && (
-        <div className="rounded-md border border-border bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
-          <div className="mb-1.5">
-            This return has been <strong>{detail.status}</strong>. The action
-            buttons are locked to prevent an accidental flip.
+      {/* Ranked offers from the ML model */}
+      <div className="space-y-3">
+        <div className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+          Ranked retention offers {detail.recommended_offer && '· model pick highlighted'}
+        </div>
+        {ranked.length === 0 ? (
+          <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+            No model recommendation yet for this subscriber. Pick an offer manually below.
           </div>
-          <label className="inline-flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={overrideFinal}
-              onChange={(e) => setOverrideFinal(e.target.checked)}
-              className="size-3.5"
-            />
-            <span>Override — let me decide again</span>
-          </label>
+        ) : (
+          <ul className="space-y-2">
+            {ranked.map((o) => {
+              const isPick = o.offerType === detail.recommended_offer;
+              const isSelected = o.offerType === selectedOffer;
+              return (
+                <li key={o.offerType}>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedOffer(o.offerType)}
+                    className={`w-full text-left rounded-lg border px-3 py-2.5 transition-colors flex items-center justify-between gap-3 ${
+                      isSelected
+                        ? 'border-foreground/40 bg-muted/50'
+                        : 'border-border bg-card hover:border-foreground/20'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span
+                        className={`size-3.5 rounded-full border shrink-0 ${
+                          isSelected ? 'border-foreground bg-foreground' : 'border-muted-foreground/40'
+                        }`}
+                        aria-hidden
+                      />
+                      <span className="font-medium truncate">{OFFER_LABELS[o.offerType]}</span>
+                      {isPick && (
+                        <span className="rounded-full px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-primary/15 text-primary shrink-0">
+                          model pick
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="font-mono text-sm">
+                        ${Math.round(o.predictedNetValueUsd).toLocaleString()} net
+                      </div>
+                      <div className="text-[10px] text-muted-foreground">
+                        ${Math.round(o.predictedRetainedClvUsd).toLocaleString()} retained · ${Math.round(o.costUsd)} cost
+                      </div>
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
+      {isDecided && (
+        <div className="rounded-md border border-border bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+          Latest action on this subscriber: <strong>{latestAction.status}</strong>
+          {latestAction.offer_type && <> · {OFFER_LABELS[latestAction.offer_type]}</>}
+          {latestAction.approved_by && <> · by {latestAction.approved_by}</>}. You can record another.
         </div>
       )}
 
@@ -101,35 +166,25 @@ export function ReturnTab({
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Add context for QA or the customer-success team…"
+          placeholder="Add context for the care team…"
           rows={3}
           className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground/40"
         />
         {error && <div className="text-xs text-destructive">{error}</div>}
         <div className="flex gap-2">
           <ActionButton
-            label="Approve"
+            label={`Approve ${OFFER_LABELS[selectedOffer]}`}
             icon={<CheckCircle2 className="size-4" />}
             onClick={() => decide('approved')}
             pending={pending === 'approved'}
-            disabled={actionsLocked}
             variant="success"
           />
           <ActionButton
-            label="Reject"
+            label="Decline"
             icon={<XCircle className="size-4" />}
-            onClick={() => decide('rejected')}
-            pending={pending === 'rejected'}
-            disabled={actionsLocked}
+            onClick={() => decide('declined')}
+            pending={pending === 'declined'}
             variant="neutral"
-          />
-          <ActionButton
-            label="Escalate"
-            icon={<AlertTriangle className="size-4" />}
-            onClick={() => decide('escalated')}
-            pending={pending === 'escalated'}
-            disabled={actionsLocked}
-            variant="danger"
           />
         </div>
       </div>
@@ -144,23 +199,11 @@ function DetailRow({
 }: {
   label: string;
   value: React.ReactNode;
-  /** When true, the row spans both columns on phone (used for long Reason text). */
   full?: boolean;
 }) {
-  // Layout:
-  // - Phone (parent grid-cols-2): each cell = one field with label above value.
-  //   `full` cells span both columns (Reason text).
-  // - sm+ (parent grid-cols-1): each cell becomes a sub-grid with label
-  //   taking 1/3 width and value 2/3 — the classic side-by-side layout.
   return (
-    <div
-      className={`flex flex-col sm:grid sm:grid-cols-3 ${
-        full ? 'col-span-2 sm:col-span-1' : ''
-      }`}
-    >
-      <dt className="text-xs uppercase tracking-[0.15em] text-muted-foreground pt-0.5">
-        {label}
-      </dt>
+    <div className={`flex flex-col sm:grid sm:grid-cols-3 ${full ? 'col-span-2 sm:col-span-1' : ''}`}>
+      <dt className="text-xs uppercase tracking-[0.15em] text-muted-foreground pt-0.5">{label}</dt>
       <dd className="sm:col-span-2">{value}</dd>
     </div>
   );
